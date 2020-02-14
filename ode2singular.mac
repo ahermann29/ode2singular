@@ -1,0 +1,1172 @@
+/*Andreas Hermann 2020*/
+/*This program tries to find the general solution y(x) to the equation y''(x)+p1(x)*y'(x)+p0(x)*y(x)=0.
+
+Example of usage:
+p1: 1/x;
+p0: 1/x^2;
+ode2singular(p1,p0,y,x);
+
+In order to solve the equation with a change of variable replacing x by phi(x):
+p1: 0;
+p0: a-2*q*cos(2*x);
+phi: cos(x);
+phi_inv: acos(x);
+ode2singular_transform(p1,p0,y,x,phi,phi_inv);
+
+We write y(x)=h(x)*g(x) such that g(x) satsfies an equation of the form g''(x)+q0(x)*g(x)=0.
+We define args_list: [p1, p0, q0, argument]
+where argument is the current variable.
+At the beginning argument=x.
+*/
+
+
+ode2singular(p1, p0, dep_var, x):=block([radexpand: all, h_function, q0, argument, args_list],
+    h_function: radcan(exp(-integrate(p1,x)/2)),
+    q0: ratsimp(-diff(p1,x)/2 - p1^2/4 + p0),
+    print("This program tries to find the general solution f to the equation f''+p1*f'+p0*f=0"),
+    print("p1 = ", p1),
+    print("p0 = ", p0),
+    print("The dependent variable is", dep_var, ", the independent variable is", x),
+    /*print("Every solution has the form f = h * g, where h = ", h_function),
+    print("and g is a solution to g'' + Q * g = 0, where"),
+    print("Q = ", factor(q0)),*/
+    argument: x,
+    args_list: [p1, p0, q0, argument],
+    determine_singular_points(args_list, h_function, dep_var, x)
+	)$
+
+
+ode2singular_transform(p1, p0, dep_var, x, phi, phi_inv):=block([radexpand: all, h_function, q0, argument, args_list, args_new],
+    h_function: radcan(exp(-integrate(p1,x)/2)),
+    q0: ratsimp(-diff(p1,x)/2 - p1^2/4 + p0),
+    print("This program tries to find the general solution f to the equation f''+p1*f'+p0*f=0"),
+    print("p1= ", p1),
+    print("p0= ", p0),
+	print("The dependent variable is", dep_var, ", the independent variable is", x),
+    /*print("Every solution has the form f = h * g, where h = ", h_function),
+    print("and g is a solution to g'' + Q * g = 0, where"),
+    print("Q = ", factor(q0)),*/
+	argument: x,
+    args_list: [p1, p0, q0, argument],
+	args_new: inv_transform(args_list, phi, phi_inv, x),
+	args_new[2]: ratsimp(trigexpand(args_new[2])),
+	args_new[1]: ratsimp(trigexpand(args_new[1])),
+	args_new[3]: ratsimp(trigexpand(args_new[3])),
+	args_new[4]: ratsimp(trigexpand(args_new[4])),
+    /*print("new list: ", args_new),*/
+	determine_singular_points(args_new, h_function, dep_var, x)
+	)$
+
+
+
+determine_singular_points(args_list,h_function,dep_var,x):=block([i, fact_data, reg_sing, irreg_sing, reg_mult, irreg_mult],
+	fact_data: determine_factorization(denom(args_list[3]),x),
+    /*We have fact_data = [coeff, sing_points, multiplicities]*/
+	if fact_data[1]#inf then
+        (
+        reg_sing: [],
+        irreg_sing: [],
+        reg_mult: [],
+        irreg_mult: [],
+        /*-----------------------------------------------------------------------------------------------
+        decide for every singular point of the equation in Q-form whether it is regular or 
+        irregular: If q0 has a singularity of order at most 2 then the singular point is regular, 
+        otherwise it is irregular.
+        -----------------------------------------------------------------------------------------------*/
+        for i:1 thru length(fact_data[2]) do
+            (
+            if fact_data[3][i]>2 then
+                (
+                push(fact_data[2][i],irreg_sing),
+                push(fact_data[3][i],irreg_mult)
+                )
+            else
+                (
+                push(fact_data[2][i],reg_sing),
+                push(fact_data[3][i],reg_mult)
+                )
+            ),
+        /*-----------------------------------------------------------------------------------------------
+        Infinity is always a singular point of the equation in Q-form.
+        Decide whether infinity is a regular or an irregular singular point.
+        If x^2*q0(x) is bounded as abs(x) goes to infinity then infinity is a regular singular 
+        point, otherwise it is an irregular singular point.
+        x=inf will be the first item in the list reg_sing or irreg_sing respectively
+        -----------------------------------------------------------------------------------------------*/
+        if limit(x^2*args_list[3],x,inf)#inf and limit(x^2*args_list[3],x,inf)#minf and limit(x^2*args_list[3],x,minf)#inf and limit(x^2*args_list[3],x,minf)#minf then
+            (
+            push(x=inf,reg_sing),
+            /*We don't determine the multiplicity of infinity.*/
+            push(unknown,reg_mult)
+            )
+        else
+            (
+            push(x=inf,irreg_sing),
+            /*We don't determine the multiplicity of infinity.*/
+            push(unknown,irreg_mult)
+            ),
+        if length(reg_sing)=0 then
+            (
+            print("The equation has no regular singular points.")
+            )
+        else
+            (
+            print("The equation has the regular singular points ", reg_sing)
+            /*print("with multiplicities ", reg_mult)*/
+            ),
+        if length(irreg_sing)=0 then
+            (
+            print("The equation has no irregular singular points.")
+            )
+        else
+            (
+            print("The equation has the irregular singular points ", irreg_sing)
+			/*print("with multiplicities ", irreg_mult)*/
+            ),
+        if diff(args_list[3],x)=0 then 
+            (
+            solve_const_coeff(args_list,h_function,dep_var,x)
+            )
+        else if length(reg_sing)=3 and length(irreg_sing)=0 then 
+            (
+            solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,reg_mult)
+            )
+        else if length(reg_sing)=1 and length(irreg_sing)=1 then
+            (
+            solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing)
+            )
+        else if length(reg_sing)=2 and length(irreg_sing)=0 then
+            (
+			solve_power(args_list,h_function,dep_var,x,reg_sing,irreg_sing)
+            )
+        /*else if diff(args_list[3],x,3)=0 and diff(args_list[3],x)#0 then*/
+		else if length(reg_sing)=0 and length(irreg_sing)=1 then
+            (
+            solve_parabolic_cylinder(args_list,h_function,dep_var,x)
+            )
+		else if length(reg_sing)=2 and length(irreg_sing)=1 then
+		    (
+			solve_bessel_or_kummer_mobius_or_spheroid(args_list,h_function,dep_var,x,reg_sing,irreg_sing)
+			)
+		else if length(reg_sing)=4 and length(irreg_sing)=0 then
+		    (
+			solve_4_reg_sing(args_list,h_function,dep_var,x,reg_sing,irreg_sing)
+			)
+        else
+            (
+            /*print("The equation cannot be reduced to any of the equations implemented so far."),*/
+			show_hint(dep_var,x)
+            )
+        )
+    else
+	    (
+		print("Error: Could not factor the denominator of Q=",args_list[3]),
+		show_hint(dep_var,x)
+		)
+    )$
+
+
+show_hint(dep_var,x):=block([],
+    print("The program could not solve the equation."),
+	print("If you want to apply a change of variable Phi(",x,") use"),
+	print("ode2singular_transform(p1,p0,",dep_var,",",x,",Phi, Phi_inv) where"),
+	print("Phi_inv(",x,") is the inverse function of Phi.")
+    )$
+
+
+complex_sqrt(re,im):=block([sol_re,sol_im],
+    /*This function computes a complex square root of the number re + %i * im*/
+    sol_re: radcan(sqrt(ratsimp((radcan(sqrt(re^2+im^2))+re)/2))),
+	sol_im: radcan(sqrt(ratsimp((radcan(sqrt(re^2+im^2))-re)/2))),
+	if im<0 then
+	    (
+		sol_im: -sol_im
+		),
+	return(sol_re+%i*sol_im)
+    )$
+
+
+simpl(f):=block([],
+    return(factor(ratsimp(radcan(f))))
+    )$
+
+
+solve_const_coeff(args_list,h_function,dep_var,x):=block([re, im, sol, h_function_const, m_function],
+    if diff(args_list[3],x)#0 then
+        (
+	    print("Error: The function solve_const_coeff should only be called if Q is constant."),
+		show_hint(dep_var,x)
+        )
+    else
+        (
+        re: realpart(args_list[3]),
+        im: imagpart(args_list[3]),
+        h_function_const: 1,
+        m_function: diff(args_list[4],x)^(1/2)*subst(args_list[4],x,h_function_const),
+        if asksign(im)=zero then
+            (
+            if asksign(re)=pos then
+                (
+                [dep_var=%k1*simpl(h_function/m_function)*cos(sqrt(re)*args_list[4])+%k2*simpl(h_function/m_function)*sin(sqrt(re)*args_list[4])]
+                )
+            else if asksign(re)=neg then 
+                (
+                [dep_var=%k1*simpl(h_function/m_function)*exp(sqrt(-re)*args_list[4])+%k2*simpl(h_function/m_function)*exp(-sqrt(-re)*args_list[4])]
+                )
+            else
+                (
+                [dep_var=%k1*simpl(h_function/m_function)*args_list[4]+%k2*simpl(h_function/m_function)]
+                )
+            )
+        else
+            (
+			sol: complex_sqrt(-re,-im),
+            [dep_var=%k1*simpl(h_function/m_function)*exp(sol*args_list[4])+%k2*simpl(h_function/m_function)*exp(-sol*args_list[4])]
+            )
+        )
+    )$
+
+
+solve_power(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([beta, coeffC, h_function_power, phi, phi_inv, args_new, m_function_new, discrim],
+    if length(reg_sing)#2 or length(irreg_sing)#0 then 
+        (
+        print("Error: The function solve_power should only be called in case of 2 regular singular points and 0 irregular singular points."),
+		show_hint(dep_var,x)
+        )
+	else if rhs(reg_sing[1])#inf and rhs(reg_sing[2])#inf then
+	    (
+		print("Error: The function solve_power should only be called if inf is a regular singular point."),
+		show_hint(dep_var,x)
+		)
+    else
+        (
+		if rhs(reg_sing[1])=inf then 
+		    (
+			beta: rhs(reg_sing[2])
+			)
+		else
+		    (
+            beta: rhs(reg_sing[1])
+			),
+        coeffC: ratsimp(args_list[3]*(x-beta)^2),
+        if diff(coeffC,x)#0 then
+            (
+            print("Error: The function solve_power should not be called if Q(x) is not of the form C/(x-beta)^2 with C constant."),
+			show_hint(dep_var,x)
+            )
+        else
+            (
+			h_function_power: 1,
+			phi: x-beta,
+			phi_inv: x+beta,
+			args_new: inv_transform(args_list, phi, phi_inv, x),
+            m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_power),
+            if coeffC=1/4 then
+                (
+                [dep_var=%k1*simpl(h_function/m_function_new*sqrt(args_new[4]))+%k2*simpl(h_function/m_function_new*sqrt(args_new[4])*log(args_new[4]))]
+                )
+            else
+                (
+				discrim: complex_sqrt(1-4*realpart(coeffC),-4*imagpart(coeffC)),
+				if imagpart(discrim)=0 then
+				    (
+                    [dep_var=%k1*simpl(h_function/m_function_new*args_new[4]^((1+discrim)/2))+%k2*simpl(h_function/m_function_new*args_new[4]^((1-discrim)/2))]
+					)
+				else if realpart(discrim)=0 then
+				    (
+					[dep_var=%k1*simpl(h_function/m_function_new*args_new[4]^((1+realpart(discrim))/2))*cos(imagpart(discrim)/2*log(args_new[4]))+%k2*simpl(h_function/m_function_new*args_new[4]^((1+realpart(discrim))/2))*sin(imagpart(discrim)/2*log(args_new[4]))]
+					)
+				else
+				    (
+					[dep_var=%k1*simpl(h_function/m_function_new*args_new[4]^((1+realpart(discrim))/2)*(cos(imagpart(discrim)/2*log(args_new[4]))+%i*sin(imagpart(discrim)/2*log(args_new[4]))))+%k2*simpl(h_function/m_function_new*args_new[4]^((1-realpart(discrim))/2)*(cos(imagpart(discrim)/2*log(args_new[4]))-%i*sin(imagpart(discrim)/2*log(args_new[4]))))]
+					/*[dep_var=%k1*ratsimp(radcan(h_function/m_function_new*exp((1+discrim)/2*log(args_new[4]))))+%k2*ratsimp(radcan(h_function/m_function_new*exp((1-discrim)/2*log(args_new[4]))))]*/
+					)
+                )
+            )
+        )
+    )$
+
+
+solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_data, coeffA, coeffC, exponent, z0, alpha, k, sol_a, sol_b, lambda, phi, phi_inv, args_new, m_function_new, h_function_airy, h_function_bessel, h_function_hermite, h_function_kummer],
+    answer: [],
+    det_data: determine_coeff_1(args_list[3],x),
+    coeffA: det_data[1],
+    exponent: det_data[2],
+    z0: det_data[3],
+	if exponent=1 then
+	    (
+		alpha: (-coeffA)^(1/3),
+		h_function_airy: 1,
+		phi: alpha*(x-z0),
+		phi_inv: x/alpha+z0,
+		args_new: inv_transform(args_list, phi, phi_inv, x),
+        m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_airy),
+        print("The solutions can be expressed in terms of Airy functions."),
+        push(dep_var=%k1*simpl(h_function/m_function_new)*airy_ai(args_new[4])+%k2*simpl(h_function/m_function_new)*airy_bi(args_new[4]), answer)
+		)
+	else if det_data[2]#inf and det_data[2]#-2 then
+	    (
+		k: (exponent+2)/2,
+		sol_a: 1/(2*k),
+		alpha: sqrt(coeffA)/k,
+		h_function_bessel: x^(-1/2),
+		phi: alpha*(x-z0)^k,
+		phi_inv: (x/alpha)^(1/k)+z0,
+		args_new: inv_transform(args_list, phi, phi_inv, x),
+        m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_bessel),
+		print("The solutions can be expressed in terms of Bessel functions."),
+        push(dep_var=%k1*simpl(h_function/m_function_new)*bessel_j(sol_a,args_new[4])+%k2*simpl(h_function/m_function_new)*bessel_y(sol_a,args_new[4]), answer)
+		)
+	else
+	    (
+		det_data: determine_coeff_4(args_list[3],x),
+        coeffA: det_data[1],
+        coeffC: det_data[2],
+        exponent: det_data[3],
+        z0: det_data[4],
+		if exponent#inf and exponent#0 and coeffA#0 then
+		    (
+			lambda: ratsimp(radcan((coeffC/sqrt(-coeffA)-1)/2)),
+			if exponent=2 and askinteger(lambda)=yes then
+			    (
+				print("The solutions can be expressed in terms of Hermite polynomials and confluent hypergeometric functions."),
+				alpha: (-coeffA)^(1/4),
+				h_function_hermite: exp(x^2/2),
+				phi: alpha*(x-z0),
+				phi_inv: x/alpha+z0,
+			    args_new: inv_transform(args_list, phi, phi_inv, x),
+                m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_hermite),
+				if askinteger(lambda,even)=yes then
+				    (
+                    push(dep_var=%k1*simpl(h_function/m_function_new)*hermite(lambda,args_new[4])+%k2*simpl(h_function/m_function_new)*args_new[4]*kummer_m((1-lambda)/2,3/2,args_new[4]^2), answer)
+					)
+				else
+				    (
+                    push(dep_var=%k1*simpl(h_function/m_function_new)*hermite(lambda,args_new[4])+%k2*simpl(h_function/m_function_new)*kummer_m(-lambda/2,1/2,args_new[4]^2), answer)
+					)
+				)
+			else
+			    (
+			    sol_b: ratsimp(1+1/exponent),
+			    alpha: ratsimp(2*radcan(sqrt(-coeffA))/exponent),
+			    sol_a: ratsimp(sol_b/2-coeffC/(alpha*exponent^2)),
+			    h_function_kummer: x^(-sol_b/2)*exp(x/2),
+			    phi: alpha*(x-z0)^exponent,
+			    phi_inv: (x/alpha)^(1/exponent)+z0,
+			    args_new: inv_transform(args_list, phi, phi_inv, x),
+                m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_kummer),
+			    print("The solutions can be expressed in terms of parabolic cylinder functions."),
+			    kummer_fund_system(dep_var,simpl(h_function/m_function_new),sol_a,sol_b,args_new[4],answer)
+				)
+			)
+		else
+		    (
+			print("Error: The function_parabolic_cylinder cannot find a solution."),
+			show_hint(dep_var,x)
+			)
+		)
+    )$
+
+
+kummer_fund_system(dep_var,h_function,sol_a,sol_b,argument,answer):=block(
+    /*This function assigns
+	dep_var=%k1*h_function*kummer_1(sol_a,sol_b,argument)+%k2*h_function*kummer_2(sol_a,sol_b,argument)
+    where kummer_1 and kummer_2 are two linearly independent solutions of the Kummer equation.
+	The functions kummer_1 and kummer_2 are the functions kummer_m or kummer_u or related functions or generalized Laguerre polynomials.*/
+    if askinteger(sol_a)=yes and asksign(sol_a)#pos then
+        (
+		print("The solutions can be expressed in terms of confluent hypergeometric functions and generalized Laguerre polynomials."),
+        if askinteger(sol_b)=no then 
+            (
+            push(dep_var=%k1*h_function*gen_laguerre(-sol_a,ratsimp(sol_b-1),argument)+%k2*h_function*argument^(ratsimp(1-sol_b))*kummer_m(ratsimp(1+sol_a-sol_b),ratsimp(2-sol_b),argument), answer)
+            )
+        else
+            (
+		    push(dep_var=%k1*h_function*gen_laguerre(-sol_a,ratsimp(sol_b-1),argument)+%k2*h_function*exp(argument)*kummer_u(ratsimp(sol_b-sol_a),sol_b,-argument), answer)
+            )
+        )
+    else 
+        (
+		print("The solutions can be expressed in terms of confluent hypergeometric functions."),
+        if is(sol_a=sol_b)=true then
+            (
+            push(dep_var=%k1*radcan(h_function*exp(argument))+%k2*h_function*kummer_u(sol_a,sol_b,argument), answer)
+            )
+        else
+            (
+            if askinteger(sol_b)=yes and asksign(sol_b)#pos then 
+                (
+                push(dep_var=%k1*h_function*kummer_m(ratsimp(1+sol_a-sol_b),ratsimp(2-sol_b),argument)+%k2*h_function*kummer_u(sol_a,sol_b,argument), answer)
+                )
+			else if sol_a=1/2 and sol_b=3/2 then
+			    (
+				push(dep_var=%k1*h_function*erf(%i*sqrt(argument))/sqrt(argument)+%k2*h_function*argument^(-1/2), answer)
+				)
+            else
+                (
+                push(dep_var=%k1*h_function*kummer_m(sol_a,sol_b,argument)+%k2*h_function*kummer_u(sol_a,sol_b,argument), answer)
+                )
+            )
+        )
+    )$
+
+
+solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([answer, beta, nm, det_data, coeffA, coeffB, coeffC, exponent, k, alpha, sol_a, sol_b, phi, phi_inv, m_function_new, h_function_bessel, h_function_kummer, h_function_airy, args_new],
+    if length(reg_sing)#1 or length(irreg_sing)#1 then 
+        (
+        print("Error: The function solve_bessel_or_kummer should only be called in case of 1 regular singular point and 1 irregular singular point."),
+		show_hint(dep_var,x)
+        )
+    else if (rhs(reg_sing[1])=inf and rhs(irreg_sing[1])=inf) or (rhs(reg_sing[1])#inf and rhs(irreg_sing[1])#inf) then
+        (
+        print("Error: The function solve_bessel_or_kummer only works if infinity is either a regular or an irregular singular point."),
+		show_hint(dep_var,x)
+        )
+    else
+        (
+		answer: [],
+        if rhs(reg_sing[1])#inf and rhs(irreg_sing[1])=inf then
+            (
+            beta: rhs(reg_sing[1])
+            )
+        else
+            (
+            beta: rhs(irreg_sing[1])
+            ),
+        nm: expand(ratsimp(args_list[3]*4*(x-beta)^2)),
+        nm: expand(subst(x+beta,x,nm)),
+        det_data: determine_coeff_2(nm,x),
+        coeffA: det_data[1],
+        coeffB: det_data[2],
+        coeffC: det_data[3],
+        exponent: det_data[4],
+        if diff(nm,x)=0 or exponent=inf or ratsimp(exponent)=0 then 
+            (
+            print("Error: The function solve_bessel_or_kummer only works if Q(x) is of the form P(x)/(4*(x-beta)^2) where P is of the form A*(x-beta)^(2*k)+B*(x-beta)^k*C with k not zero and A, B not both zero."),
+			show_hint(dep_var,x)
+            )
+        else if ratsimp(coeffB)=0 then
+            (
+			k: exponent/3,
+			if 1-k^2=coeffC then
+			    (
+				alpha: (-coeffA/(4*k^2))^(1/3),
+				h_function_airy: 1,
+				phi: alpha*(x-beta)^k,
+				phi_inv: (x/alpha)^(1/k)+beta,
+				args_new: inv_transform(args_list, phi, phi_inv, x),
+                m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_airy),
+                print("The solutions can be expressed in terms of Airy functions."),
+				push(dep_var=%k1*simpl(h_function/m_function_new)*airy_ai(args_new[4])+%k2*simpl(h_function/m_function_new)*airy_bi(args_new[4]), answer)
+				),
+            alpha: ratsimp(radcan(sqrt(ratsimp(coeffA)))/exponent),
+            sol_a: ratsimp(radcan(sqrt(ratsimp(1-coeffC)))/exponent),
+			h_function_bessel: x^(-1/2),
+			phi: alpha*(x-beta)^(exponent/2),
+			phi_inv: (x/alpha)^(2/exponent)+beta,
+			args_new: inv_transform(args_list, phi, phi_inv, x),
+			m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_bessel),
+            print("The solutions can be expressed in terms of Bessel functions."),
+            if askinteger(sol_a)=yes then
+                (
+                push(dep_var=%k1*simpl(h_function/m_function_new)*bessel_j(sol_a,args_new[4])+%k2*simpl(h_function/m_function_new)*bessel_y(sol_a,args_new[4]), answer)
+                )
+            else 
+                (
+                push(dep_var=%k1*simpl(h_function/m_function_new)*bessel_j(sol_a,args_new[4])+%k2*simpl(h_function/m_function_new)*bessel_j(-sol_a,args_new[4]), answer)
+                )
+            )
+        else
+            (
+            alpha: ratsimp(radcan(sqrt(ratsimp(-coeffA)))/exponent),
+            sol_b: ratsimp(1+radcan(sqrt(ratsimp(1-coeffC)))/exponent),
+            sol_a: ratsimp(sol_b/2-coeffB/(4*alpha*exponent^2)),
+			h_function_kummer: x^(-sol_b/2)*exp(x/2),
+			phi: alpha*(x-beta)^exponent,
+			phi_inv: (x/alpha)^(1/exponent)+beta,
+			args_new: inv_transform(args_list, phi, phi_inv, x),
+			m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_kummer),
+            kummer_fund_system(dep_var,simpl(h_function/m_function_new),sol_a,sol_b,args_new[4],answer)
+            )
+        )
+    )$
+
+
+solve_bessel_or_kummer_mobius_or_spheroid(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([beta, delta, phi, phi_inv, args_new, reg_sing_new, irreg_sing_new],
+    if length(reg_sing)#2 or length(irreg_sing)#1 then 
+        (
+        print("Error: The function solve_bessel_or_kummer_mobius_or_spheroid should only be called in case of 2 regular singular points and 1 irregular singular point."),
+		show_hint(dep_var,x)
+        )
+	else if reg_sing[1]=reg_sing[2] or reg_sing[1]=irreg_sing[1] or reg_sing[2]=irreg_sing[1] then 
+        (
+	    print("Error: The function solve_bessel_or_kummer_mobius_or_spheroid only works if the equation has 3 distinct singular points."),
+		show_hint(dep_var,x)
+	    )
+	else if rhs(reg_sing[1])#inf and rhs(reg_sing[2])#inf and rhs(irreg_sing[1])#inf then
+	    (
+		print("Error: The function solve_bessel_or_kummer_mobius_or_spheroid only works if infinity is a singular point."),
+		show_hint(dep_var,x)
+		)
+	else if rhs(irreg_sing[1])=inf then
+	    (
+		solve_spheroid(args_list,h_function,dep_var,x,reg_sing)
+		)
+	/*-----------------------------------------------------------------------------------------------
+    In the remaining case exactly one element in reg_sing is x=inf
+    -----------------------------------------------------------------------------------------------*/
+	else
+	    (
+		if rhs(reg_sing[2])=inf then
+            (
+            beta: rhs(reg_sing[1])
+            )
+        else
+            (
+            beta: rhs(reg_sing[2])
+            ),
+		delta: rhs(irreg_sing[1]),
+		phi: (x-beta)/(x-delta),
+		phi_inv: (delta*x-beta)/(x-1),
+		args_new: inv_transform(args_list, phi, phi_inv, x),
+		reg_sing_new: [x=0],
+		irreg_sing_new: [x=inf],
+		solve_bessel_or_kummer(args_new,h_function,dep_var,x,reg_sing_new,irreg_sing_new)
+	    )
+	)$
+
+
+solve_spheroid(args_list,h_function,dep_var,x,reg_sing):=block([args_new, answer, dummy, phi, phi_inv, q0_mult, sol_q, sol_a, sol_b, sol_c, m_function_mathieu, m_function_new, h_function_mathieu, h_function_spheroid],
+    /*-----------------------------------------------------------------------------------------------
+    We order the singular points increasingly in their real part
+    -----------------------------------------------------------------------------------------------*/
+    if imagpart(rhs(reg_sing[2])-rhs(reg_sing[1]))=0 and realpart(rhs(reg_sing[2]))>realpart(rhs(reg_sing[1])) then
+        (
+	    dummy: reg_sing[2],
+	    reg_sing[2]: reg_sing[1],
+	    reg_sing[1]: dummy
+	    ),
+	phi: (2*x-rhs(reg_sing[2])-rhs(reg_sing[1]))/(rhs(reg_sing[1])-rhs(reg_sing[2])),
+    phi_inv: (rhs(reg_sing[1])-rhs(reg_sing[2]))*x/2+(rhs(reg_sing[1])+rhs(reg_sing[2]))/2,
+	args_new: inv_transform(args_list, phi, phi_inv, x),
+	q0_mult: ratsimp(args_new[3]*4*(x-1)^2*(x+1)^2),
+	if diff(q0_mult,x,5)#0 then
+	    (
+		print("The equation cannot be reduced to a spheroidal wave equation."),
+		show_hint(dep_var,x)
+		)
+	else if coeff(q0_mult,x,3)#0 or coeff(q0_mult,x,1)#0 then
+	    (
+		print("The equation cannot be reduced to a spheroidal wave equation."),
+		show_hint(dep_var,x)
+		)
+	else
+	    (
+		answer: [],
+		sol_q: coeff(q0_mult,x,4)/16,
+		sol_a: ratsimp((coeff(q0_mult,x,0)-8*sol_q-2)/4),
+		if asksign(ratsimp(coeff(q0_mult,x,2)+24*sol_q+4*sol_a-1))=zero then
+		    (
+			print("Let mathieu_1(a,q,.), mathieu_2(a,q,.) be a fundamental system to Mathieu's equation"),
+			print("f''(x)+(a-2*q*cos(2*x))*f(x)=0"),
+			/*print("(1-x^2)*f''(x)-x*f'(x)+(a+2*q-4*q*x^2)*f(x)=0"),*/
+			/*print("with a=", sol_a, "and q=", sol_q),*/
+			h_function_mathieu: (1-x^2)^(-1/4),
+			m_function_mathieu: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_mathieu),
+            print("The solutions can be given in terms of Mathieu functions."),
+			push(dep_var=%k1*simpl(h_function/m_function_mathieu)*mathieu_1(sol_a,sol_q,acos(args_new[4]))+%k2*simpl(h_function/m_function_mathieu)*mathieu_2(sol_a,sol_q,acos(args_new[4])), answer)
+			),
+		sol_b: ratsimp(radcan(sqrt(4-coeff(q0_mult,x,4)-coeff(q0_mult,x,2)-coeff(q0_mult,x,0)))/2),
+		sol_c: ratsimp(coeff(q0_mult,x,0)/4-sol_b-1),
+		h_function_spheroid: (1-x^2)^(-(sol_b+1)/2),
+		m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_spheroid),
+		print("The solutions can be given in terms of spheroidal wave functions."),
+		push(dep_var=%k1*simpl(h_function/m_function_new)*spherodialwave_a(sol_b,sol_c,sol_q,args_new[4])+%k2*simpl(h_function/m_function_new)*spherodialwave_b(sol_b,sol_c,sol_q,args_new[4]), answer)
+		)
+    )$
+
+
+
+
+solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,reg_mult):=block([dummy, phi, phi_inv, p0_new_mult, p1_new_mult, sol_nu, sol_mu, h_function_legendre, m_function_new, args_new, nm, sol_a, sol_b, sol_c, coeff2, coeffA, coeffB, coeffC, h_function_hypergeo, answer],
+    if length(reg_sing)#3 or length(reg_mult)#3 or length(irreg_sing)#0 then 
+        (
+        print("Error: The function solve_legendre_or_hypergeo only works if the equation has 3 regular singular points and 0 irregular singular points."),
+		show_hint(dep_var,x)
+        )
+    else if reg_sing[1]=reg_sing[2] or reg_sing[1]=reg_sing[3] or reg_sing[2]=reg_sing[3] then 
+        (
+        print("Error: The function solve_legendre_or_hypergeo only works if the equation has 3 distinct regular singular points."),
+		show_hint(dep_var,x)
+        )
+    else if rhs(reg_sing[1])#inf and rhs(reg_sing[2])#inf and rhs(reg_sing[3])#inf then 
+        (
+        print("Error: The function solve_legendre_or_hypergeo only works if the equation has a regular singular point at infinity."),
+		show_hint(dep_var,x)
+        )
+    /*-----------------------------------------------------------------------------------------------
+    In the remaining case exactly one element in reg_sing is x=inf
+    -----------------------------------------------------------------------------------------------*/
+    else
+        (
+        /*---------------------------------------------------------------------------------------------
+        We put x=inf as the first element of reg_sing 
+        ---------------------------------------------------------------------------------------------*/
+        if rhs(reg_sing[1])#inf then
+            (
+            for i: 2 thru 3 do
+            if rhs(reg_sing[i])=inf then
+                (
+                dummy: reg_sing[1],
+                reg_sing[1]: reg_sing[i],
+                reg_sing[i]: dummy,
+                dummy: reg_mult[1],
+                reg_mult[1]: reg_mult[i],
+                reg_mult[i]: dummy
+                )
+            ),
+        /*-----------------------------------------------------------------------------------------------
+        We order the singular points increasingly in their real part
+        -----------------------------------------------------------------------------------------------*/
+        if imagpart(rhs(reg_sing[3])-rhs(reg_sing[2]))=0 and realpart(rhs(reg_sing[2]))>realpart(rhs(reg_sing[3])) then
+            (
+            dummy: reg_sing[2],
+            reg_sing[2]: reg_sing[3],
+            reg_sing[3]: dummy,
+            dummy: reg_mult[2],
+            reg_mult[2]: reg_mult[3],
+            reg_mult[3]: dummy
+            ),
+		answer: [],
+        phi: (2*x-rhs(reg_sing[2])-rhs(reg_sing[3]))/(rhs(reg_sing[3])-rhs(reg_sing[2])),
+        phi_inv: (rhs(reg_sing[3])-rhs(reg_sing[2]))*x/2+(rhs(reg_sing[3])+rhs(reg_sing[2]))/2,
+		args_new: inv_transform(args_list, phi, phi_inv, x),
+        p0_new_mult: expand(ratsimp(args_new[2]*(x^2-1)^2)),
+        p1_new_mult: expand(ratsimp(args_new[1]*(x^2-1))),
+        /*---------------------------------------------------------------------------------------------
+        Case 1: the transformed equation is in fact a Legendre equation.
+        The solutions are Legendre functions without additional factors.
+        ---------------------------------------------------------------------------------------------*/
+        if coeff(p0_new_mult,x,1)=0 and p1_new_mult=2*x then
+            (
+            /*print("The transformed equation is a Legendre equation"),*/
+            sol_nu: ratsimp((-1+radcan(sqrt(ratsimp(1-4*coeff(p0_new_mult,x,2)))))/2),
+            sol_mu: sqrt(ratsimp(-coeff(p0_new_mult,x,2)-coeff(p0_new_mult,x,0))),
+            print("The solutions can be expressed in terms of associated Legendre functions."),
+            push(dep_var=%k1*assoc_legendre_p(sol_nu,sol_mu,args_new[4])+%k2*assoc_legendre_q(sol_nu,sol_mu,args_new[4]),answer)
+            )
+        /*---------------------------------------------------------------------------------------------
+        Case 2: the transformed equation is not a Legendre equation.
+        The solutions are possibly Legendre functions with additional factors.
+        ---------------------------------------------------------------------------------------------*/
+        else
+            (
+            nm: expand(ratsimp(args_new[3]*4*(x^2-1)^2)),
+            if diff(nm,x,3)#0 then
+                (
+                print("Error: The function Q passed to solve_legendre does not have infinity as a regular singular point.")
+                )
+            else
+                (
+                coeffA: coeff(nm,x,2),
+                coeffB: coeff(nm,x,1),
+                coeffC: coeff(nm,x,0),
+                if coeffB#0 then 
+                    (
+                    print("The equation cannot be reduced to a Legendre equation.")
+                    )
+                else
+                    (
+                    sol_nu: ratsimp((-1+radcan(sqrt(ratsimp(1-coeffA))))/2),
+                    sol_mu: radcan(sqrt(1-coeffA/4-coeffC/4)),
+					h_function_legendre: 1/sqrt(1-x^2),
+					m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_legendre),
+                    print("The solutions can be expressed in terms of associated Legendre functions."),
+                    push(dep_var=%k1*simpl(h_function/m_function_new)*assoc_legendre_p(sol_nu,sol_mu,args_new[4])+%k2*simpl(h_function/m_function_new)*assoc_legendre_q(sol_nu,sol_mu,args_new[4]),answer)
+                    )
+                )
+			),
+		phi: (x-rhs(reg_sing[2]))/(rhs(reg_sing[3])-rhs(reg_sing[2])),
+        phi_inv: (rhs(reg_sing[3])-rhs(reg_sing[2]))*x+rhs(reg_sing[2]),
+		args_new: inv_transform(args_list, phi, phi_inv, x),
+        p0_new_mult: expand(ratsimp(args_new[2]*x*(1-x))),
+        p1_new_mult: expand(ratsimp(args_new[1]*x*(1-x))),
+        /*---------------------------------------------------------------------------------------------
+        Case 1: the transformed equation is in fact a hypergeometric equation.
+        The solutions are hypergeometric functions without additional factors.
+        ---------------------------------------------------------------------------------------------*/
+        if diff(p0_new_mult,x)=0 and diff(p1_new_mult,x,2)=0 then
+            (
+            /*print("The transformed equation is a hypergeometric equation"),*/
+            sol_c: ratsimp(coeff(p1_new_mult,x,0)),
+            coeff2: coeff(p1_new_mult,x,1),
+            sol_a: ratsimp((-1-coeff2-radcan(sqrt(expand((1+coeff2)^2+4*p0_new_mult))))/2),
+            sol_b: ratsimp((-1-coeff2+radcan(sqrt(expand((1+coeff2)^2+4*p0_new_mult))))/2),
+            hypergeo_fund_system(dep_var,1,sol_a,sol_b,sol_c,args_new[4],answer)
+            )
+        /*---------------------------------------------------------------------------------------------
+        Case 2: the transformed equation is not a hypergeometric equation.
+        The solutions are hypergeometric functions with additional factors.
+        ---------------------------------------------------------------------------------------------*/
+        else
+            (
+            nm: expand(ratsimp(args_new[3]*4*x^2*(x-1)^2)),
+            if diff(nm,x,3)#0 then
+                (
+                print("Error: The function Q passed to solve_hypergeo does not have infinity as a regular singular point."),
+				show_hint(dep_var,x)
+                )
+            else
+                (
+                coeffA: coeff(nm,x,2),
+                coeffB: coeff(nm,x,1),
+                coeffC: coeff(nm,x,0),
+                /*---------------------------------------------------
+                In some cases sign problems can arise in the following if the radicand contains variables.
+                This is due to the behavior of the function radcan which I don't fully understand.
+                -------------------------------------------------------*/
+                sol_c: radcan(1+sqrt(ratsimp(1-coeffC))),
+                sol_a: radcan((sol_c+sqrt(ratsimp(1-coeffA-coeffB-coeffC))+sqrt(ratsimp(1-coeffA)))/2),
+                sol_b: radcan(sol_a-sqrt(ratsimp(1-coeffA))),
+                if ratsimp(1-(sol_a-sol_b)^2-coeffA)#0 or ratsimp((1-sol_a-sol_b)*sol_c*2+4*sol_a*sol_b+coeffB)#0 or ratsimp(sol_c^2-2*sol_c+coeffC)#0 then
+                    (
+                    sol_a: radcan((sol_c-sqrt(ratsimp(1-coeffA-coeffB-coeffC))-sqrt(ratsimp(1-coeffA)))/2),
+                    sol_b: radcan(sol_a-sqrt(ratsimp(1-coeffA))),
+                    if ratsimp(1-(sol_a-sol_b)^2-coeffA)#0 or ratsimp((1-sol_a-sol_b)*sol_c*2+4*sol_a*sol_b+coeffB)#0 or ratsimp(sol_c^2-2*sol_c+coeffC)#0 then
+                        (
+                        print("Error: The function solve_hypergeo could not determine the coefficients")
+                        )
+                    else
+                        (
+                        /*print("Determination of a, b, c successful"),*/
+						h_function_hypergeo: exp(-(sol_c*log(x)+ratsimp(1+sol_a+sol_b-sol_c)*log(x-1))/2),
+						m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_hypergeo),
+                        hypergeo_fund_system(dep_var,simpl(h_function/m_function_new),sol_a,sol_b,sol_c,args_new[4],answer)
+                        )
+                    )
+                else
+                    (
+                    /*print("Determination of a, b, c successful"),*/
+					h_function_hypergeo: exp(-(sol_c*log(x)+ratsimp(1+sol_a+sol_b-sol_c)*log(x-1))/2),
+					m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_hypergeo),
+					hypergeo_fund_system(dep_var,simpl(h_function/m_function_new),sol_a,sol_b,sol_c,args_new[4],answer)
+                    )
+                )
+            )
+	    )
+    )$
+
+
+hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=block([expand_hypergeometric: true],
+    /*This function assigns
+	dep_var=%k1*h_function*gauss_1(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_2(sol_a,sol_b,sol_c,argument)
+    where gauss_1 and gauss_2 are two linearly independent solutions of the hypergeometric equation.
+	The functions gauss_1 and gauss_2 are the hypergeometric function 2F1 or related functions.
+    In the following, the function gauss_a should be replaced by the hypergeometric function 2F1*/
+    print("The solutions can be given in terms of hypergeometric functions."),
+	if asksign(cabs(argument)-1)=neg then
+	    (
+        if askinteger(sol_c)=no then 
+	        (
+			/*[dep_var=%k1*h_function*hypergeometric([sol_a,sol_b],[sol_c],argument)+%k2*h_function*argument^(ratsimp(1-sol_c))*hypergeometric([ratsimp(1+sol_a-sol_c),ratsimp(1+sol_b-sol_c)],[ratsimp(2-sol_c)],argument)]*/
+			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*argument^(ratsimp(1-sol_c))*gauss_a(ratsimp(1+sol_a-sol_c),ratsimp(1+sol_b-sol_c),ratsimp(2-sol_c),argument),answer)
+		    )
+        else
+            (
+			/*print("In this case, a fundamental system for the equation has not yet been implemented."),*/
+		    push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
+            )
+        )
+	else if asksign(cabs(1-argument)-1)=neg then
+	    (
+		if askinteger(sol_c-sol_a-sol_b)=no then
+		    (
+			/*[dep_var=%k1*h_function*hypergeometric([sol_a,sol_b],[ratsimp(1+sol_a+sol_b-sol_c)],1-argument)+%k2*h_function*(1-argument)^(ratsimp(sol_c-sol_a-sol_b))*hypergeometric([ratsimp(sol_c-sol_a),ratsimp(sol_c-sol_b)],[ratsimp(1+sol_c-sol_a-sol_b)],1-argument)]*/
+			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,ratsimp(1+sol_a+sol_b-sol_c),1-argument)+%k2*h_function*(1-argument)^(ratsimp(sol_c-sol_a-sol_b))*gauss_a(ratsimp(sol_c-sol_a),ratsimp(sol_c-sol_b),ratsimp(1+sol_c-sol_a-sol_b),1-argument),answer)
+			)
+		else
+		    (
+			/*print("In this case, a fundamental system for the equation has not yet been implemented."),*/
+			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
+			)
+		)
+	else if asksign(cabs(argument)-1)=pos then
+	    (
+		if askinteger(sol_a-sol_b)=no then
+		    (
+			/*[dep_var=%k1*h_function*argument^(-sol_a)*hypergeometric([sol_a,ratsimp(1+sol_a-sol_c)],[ratsimp(1+sol_a-sol_b)],1/argument)+%k2*h_function*argument^(-sol_b)*hypergeometric([sol_b,ratsimp(1+sol_b-sol_c)],[ratsimp(1+sol_b-sol_a)],1/argument)]*/
+			push(dep_var=%k1*h_function*argument^(-sol_a)*gauss_a(sol_a,ratsimp(1+sol_a-sol_c),ratsimp(1+sol_a-sol_b),1/argument)+%k2*h_function*argument^(-sol_b)*gauss_a(sol_b,ratsimp(1+sol_b-sol_c),ratsimp(1+sol_b-sol_a),1/argument),answer)
+			)
+		else
+		    (
+			/*print("In this case, a fundamental system for the equation has not yet been implemented."),*/
+			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
+			)
+		)
+	else
+	    (
+		/*print("In this case, a fundamental system for the equation has not yet been implemented."),*/
+		push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
+		)
+    )$
+
+
+solve_4_reg_sing(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([dummy, q0_mult, delta, beta, alpha, phi, phi_inv, reg_sing_new, reg_mult_new, args_new],
+    if length(reg_sing)#4 or length(irreg_sing)#0 then
+	    (
+		print("Error: The function solve_4_reg_sing only works for 4 regular singular points and 0 irregular singular points."),
+		show_hint(dep_var,x)
+		)
+	else if reg_sing[1]=reg_sing[2] or reg_sing[1]=reg_sing[3] or reg_sing[1]=reg_sing[4] or reg_sing[2]=reg_sing[3] or reg_sing[2]=reg_sing[4] or reg_sing[3]=reg_sing[4] then
+        (
+        print("Error: The function solve_4_reg_sing only works if the equation has 4 distinct regular singular points."),
+		show_hint(dep_var,x)
+        )
+	else
+	    (
+		/*---------------------------------------------------------------------------------------------
+        We put x=inf as the first element of reg_sing 
+        ---------------------------------------------------------------------------------------------*/
+        if rhs(reg_sing[1])#inf then
+            (
+            for i: 2 thru 4 do
+            if rhs(reg_sing[i])=inf then
+                (
+                dummy: reg_sing[1],
+                reg_sing[1]: reg_sing[i],
+                reg_sing[i]: dummy
+                )
+            ),
+		q0_mult: ratsimp(args_list[3]*(x-rhs(reg_sing[2]))^2*(x-rhs(reg_sing[3]))^2*(x-rhs(reg_sing[4]))^2),
+		if diff(q0_mult,x,3)#0 then
+		    (
+			print("Error: The function solve_4_reg_sing only works if the numerator of Q(x) is a polynomial function of degree at most 2."),
+			show_hint(dep_var,x)
+			)
+		else
+		    (
+			delta: rhs(reg_sing[2]),
+			beta: rhs(reg_sing[3]),
+			alpha: (delta-rhs(reg_sing[4]))/(beta-rhs(reg_sing[4])),
+			phi: alpha*(x-beta)/(x-delta),
+			phi_inv: (delta*x-alpha*beta)/(x-alpha),
+			args_new: inv_transform(args_list, phi, phi_inv, x),
+			reg_sing_new: [x=inf,x=0,x=1],
+			reg_mult_new: [unknown,2,2],
+			solve_legendre_or_hypergeo(args_new,h_function,dep_var,x,reg_sing_new,irreg_sing,reg_mult_new)
+			)
+		)
+    )$
+    
+
+transform(h_function,q0,phi,x):=block([q0_new, h_function_new],
+    /*Let f=h*g where g satisfies g''+q0*g=0.
+    Let f_new(x)=f(phi(x)) and write f_new=h_new*g_new
+    where g_new satisfies g_new''+q0_new*g_new=0.
+    This function computes h_new and q0_new*/
+    q0_new: ratsimp(radcan(subst(phi,x,q0)*diff(phi,x)^2)+diff(phi,x,3)/(2*diff(phi,x))-3*diff(phi,x,2)^2/(4*diff(phi,x)^2)),
+	h_function_new: ratsimp(radcan(subst(phi,x,h_function)*diff(phi,x)^(1/2))),
+    [simpl(h_function_new), simpl(q0_new)]
+    )$
+
+
+inv_transform(args_list, phi, phi_inv, x):=block([p1_new, p0_new, q0_new, argument_new],
+    /*We define args_list: [p1, p0, q0, argument].
+    Let f satisfy f''+p1*f'+p0*f=0 and write f=h*g
+	where g satisfies g''+q0*g=0.
+	Let phi and f_new such that f_new(phi(x))=f(x) and let p1_new, p0_new, q0_new 
+	such that f_new satisfies f_new''+p1_new*f_new'+p0_new*f_new=0
+	Write f_new(x)=h_new(x)*g_new(x) where g_new satisfies g_new''+q0_new*g_new=0.
+	This function computes p1_new, p0_new and q0_new.*/
+    q0_new: (args_list[3]+3*diff(phi,x,2)^2/(4*diff(phi,x)^2)-diff(phi,x,3)/(2*diff(phi,x)))/diff(phi,x)^2,
+	q0_new: ratsimp(radcan(subst(phi_inv,x,q0_new))),
+	/*print("Change of variables: the new Q is",factor(q0_new)),*/
+	argument_new: factor(ratsimp(subst(args_list[4],x,phi))),
+	p1_new: (args_list[1]+diff(phi,x,2)/diff(phi,x))/diff(phi,x),
+	p1_new: ratsimp(radcan(subst(phi_inv,x,p1_new))),
+	p0_new: args_list[2]/diff(phi,x)^2,
+	p0_new: ratsimp(radcan(subst(phi_inv,x,p0_new))),
+    return([p1_new, p0_new, q0_new, argument_new])
+    )$
+
+
+determine_factorization(g,x):=block([k, i, j, coeff, sing_points, mult],
+    /*This function checks whether g(x) is of the form coeff*(x-z1)^k1*...*(x-zn)^kn.
+    If this is not true then the function returns [inf, [], []].
+    If this is true then the function returns [coeff, [z1,...,zn], [k1,...,kn]].*/
+	if diff(g,x)=0 then
+	    (
+        return([g, [], []])
+		)
+	else
+	    (
+	    sing_points: solve(g=0,x),
+        mult: multiplicities,
+	    if length(sing_points)=0 then
+	        (
+		    print("Error: Cannot determine the zeros of the function", g),
+            return([inf, sing_points, mult])
+		    )
+		else
+		    (
+			k: ratsimp(diff(g,x)/g),
+			for i: 1 thru length(sing_points) do
+			    (
+				k: ratsimp(radcan(k*(x-rhs(sing_points[i]))))
+				),
+			if diff(k,x,length(sing_points))#0 then
+			    (
+				print("Error: Cannot factor the function", g),
+                return([inf, sing_points, mult])
+				)
+			else
+			    (
+				coeff: g,
+				for i: 1 thru length(sing_points) do
+				    (
+					mult[i]: ratsimp(radcan(subst(rhs(sing_points[i]),x,k))),
+					for j: 1 thru i-1 do
+					    (
+						mult[i]: ratsimp(radcan(mult[i]/(rhs(sing_points[i])-rhs(sing_points[j]))))
+						),
+					for j: i+1 thru length(sing_points) do
+					    (
+						mult[i]: ratsimp(radcan(mult[i]/(rhs(sing_points[i])-rhs(sing_points[j]))))
+						),
+				    coeff: ratsimp(radcan(coeff/(x-rhs(sing_points[i]))^(mult[i])))
+					),
+				if diff(coeff,x)#0 then
+			        (
+				    print("Error: Cannot factor the function", g),
+			        return([inf, sing_points, mult])
+				    )
+                else
+                    (
+                    return([coeff, sing_points, mult])
+                    )
+				)
+			)
+		)
+    )$
+
+
+determine_coeff_1(g,x):=block([h, points, coeffA, exponent, z0],
+    /*This function checks whether g(x) is of the form A*(x-z0)^exponent with constants A, exponent, z0.
+	If this is so then it returns [A, exponent, z0].
+	If this is not so then it returns [inf, inf, inf].*/
+	if diff(g,x)=0 then
+	    (
+        return([g, 0, 0])
+		)
+	else
+	    (
+	    h: ratsimp(diff(g,x)/g),
+        if diff(ratsimp(diff(h,x)/h^2),x)=0 then
+            (
+	        points: solve(1/h=0,x),
+		    if length(points)=0 or length(points)>1 then
+		        (
+                return([inf, inf, inf])
+			    )
+		    else
+		        (
+		        z0: rhs(points[1]),
+		        exponent: ratsimp((x-z0)*h),
+		        coeffA: ratsimp(g/(x-z0)^exponent),
+		        if diff(exponent,x)#0 or diff(coeffA,x)#0 then
+		            (
+                    return([inf, inf, inf])
+			        )
+                else
+                    (
+                    return([coeffA, exponent, z0])
+                    )
+			    )
+            )
+	    else
+		    (
+            return([inf, inf, inf])
+		    )
+		)
+    )$
+
+
+
+determine_coeff_2(g,x):=block([h, coeffA, coeffB, coeffC, exponent],
+    /*------------------------
+    This function determines whether g(x) is of the form A*x^(2*k)+B*x^k+C or A*x^(2*k)+C or B*log(x)+C
+    Ouput:
+    If g(x)=A*x^(2*k)+B*x^k+C with k not 0 then the function returns [A, B, C, k].
+    If g(x)=A*x^(2*k)+C with k not 0 then the function returns [A, 0, C, 2*k].
+    If g is constant then the function returns [0, 0, g, 0].
+    If g(x)=B*log(x)+C then the function returns [0, B, C, 0].
+    If g(x) is not of any of these forms then it returns [inf, inf, inf, inf].
+    ---------------------------*/
+    if diff(g,x)=0 then
+        (
+        /*g is constant*/
+        return([0, 0, g, 0])
+        )
+    else
+        (
+        h: diff(x*diff(g,x),x)/diff(g,x),
+        if diff(h,x)=0 then 
+            (
+            if h=0 then
+                (
+                /*g(x)=B*log(x)+C*/
+                return([0, x*diff(g,x), radcan(g-coeffB*log(x)), 0])
+                )
+            else
+                (
+				/*g(x)=A*x^(2*k)+C*/
+                exponent: h,
+                coeffA: diff(g,x)*x^(1-h)/h,
+                coeffB: 0,
+                coeffC: ratsimp(g-coeffA*x^h),
+                return([coeffA, coeffB, coeffC, exponent])
+                )
+            )
+        else 
+            (
+			/*g is neither of the form A*x^(2*k)+C nor of the form B*log(x)+C*/
+            exponent: ratsimp(diff(diff(x*diff(x*diff(g,x),x),x)/diff(g,x),x)/(3*diff(h,x))),
+            if exponent=0 or diff(exponent,x)#0 then 
+                (
+				/*g is neither of the form A*x^(2k)+B*x^k+C*/
+                return([inf, inf, inf, inf])
+                )
+            else 
+                (
+                coeffA: ratsimp(diff(x^(1-exponent)*diff(g,x),x)*x^(1-exponent)/(2*exponent^2)),
+                if diff(coeffA,x)#0 then 
+                    (
+					/*g is neither of the form A*x^(2k)+B*x^k+C*/
+                    return([inf, inf, inf, inf])
+                    )
+                else
+                    (
+                    coeffB: ratsimp(diff(g-coeffA*x^(2*exponent),x)*x^(1-exponent)/exponent),
+                    if diff(coeffB,x)#0 then 
+                        (
+						/*g is neither of the form A*x^(2k)+B*x^k+C*/
+                        return([inf, inf, inf, inf])
+                        )
+                    else
+                        (
+                        coeffC: ratsimp(g-coeffA*x^(2*exponent)-coeffB*x^exponent),
+                        if diff(coeffC,x)#0 then 
+                            (
+							/*g is neither of the form A*x^(2k)+B*x^k+C*/
+                            return([inf, inf, inf, inf])
+                            )
+                        else
+                            (
+                            return([coeffA, coeffB, coeffC, exponent])
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )$
+
+
+determine_coeff_4(g,x):=block([coeffA, coeffC, exponent, z0, h1, h2, det_data, data_new],
+    /*------------------------
+    This function determines whether g(x) is of the form A*(x-z0)^(2*k-2)+C*(x-z0)^(k-2)
+	with constants A, C, k#0, z0.
+    Ouput:
+    If g(x)=A*(x-z0)^(2*k-2)+C*(x-z0)^(k-2) with k#0 then the function returns [A, C, k, z0].
+    If g(x) is not of any of these forms then it returns [inf, inf, inf, inf].
+    ---------------------------*/
+    if diff(g,x,2)=0 then
+	    (
+		print(g,"is not of the form A*(x-z0)^(2*k-2)+C*(x-z0)^(k-2)"),
+        return([inf, inf, inf, inf])
+		)
+	else if diff(g,x,3)=0 then
+	    (
+		coeffA: coeff(expand(g),x,2),
+		coeffC: ratsimp(coeff(expand(g),x,0)-coeff(expand(g),x,1)^2/(4*coeff(expand(g),x,2))),
+		exponent: 2,
+		z0: ratsimp(-coeff(expand(g),x,1)/(2*coeff(expand(g),x,2))),
+        return([coeffA, coeffC, exponent, z0])
+		)
+	else
+	    (
+		h1: ratsimp(diff(g,x)/g),
+		h2: ratsimp(diff(num(h1),x)),
+		det_data: determine_coeff_1(h2,x),
+		if det_data[2]#inf then
+		    (
+		    h1: ratsimp(subst(x+det_data[3],x,g)),
+			data_new: determine_coeff_5(h1,x),
+            if data_new[1]=inf then
+                (
+                return([inf, inf, inf, inf])
+                )
+            else
+                (
+                return([data_new[1], data_new[2], data_new[3], det_data[3]])
+                )
+			)
+		else
+		    (
+            return([inf, inf, inf, inf])
+			)
+		)
+    )$
+
+
+determine_coeff_5(g,x):=block([h1, h2, h3, exponent, coeffA, coeffC],
+    /*------------------------
+    This function determines whether g(x) is of the form A*x^(2*k-2)+C*x^(k-2)
+	with constants A, C#0 and k#0
+    Ouput:
+    If g(x)=A*x^(2*k-2)+C*x^(k-2) with k not 0 then the function returns [A, C, k].
+    If g(x) is not of any of these forms then it returns [inf, inf, inf].
+    ---------------------------*/
+	if g=0 then
+	    (
+        return([inf, inf, inf])
+		)
+	else
+	    (
+        h1: ratsimp(x*diff(g,x)/g),
+	    if diff(h1,x)=0 then
+	        (
+            return([inf, inf, inf])
+		    )
+	    else
+	        (
+		    h2: ratsimp(x*diff(x*diff(g,x),x)/g),
+		    h3: ratsimp(diff(h2,x)/diff(h1,x)),
+		    if diff(h3,x)#0 then
+		        (
+                return([inf, inf, inf])
+			    )
+		    else
+		        (
+			    exponent: ratsimp((h3+4)/3),
+			    if exponent=0 or diff(exponent,x)#0 then 
+                    (
+                    return([inf, inf, inf])
+                    )
+			    else
+			        (
+			        coeffA: ratsimp(diff(g*x^(2-k),x)*x^(1-exponent)/exponent),
+				    coeffC: ratsimp(g*x^(2-exponent)-coeffA*x^exponent),
+				    if diff(coeffA,x)#0 or diff(coeffC,x)#0 then
+				        (
+                        return([inf, inf, inf])
+					    )
+                    else
+                        (
+                        return([coeffA, coeffC, exponent])
+                        )
+				    )
+			    )
+		    )
+		)
+    )$
