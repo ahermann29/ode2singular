@@ -2,6 +2,7 @@
 This is a symbolic solver for linear homogeneous ordinary differential equations of order 2 written for the free computer algebra system Maxima.
 In order to use it put the file *ode2singular.mac* in one of the paths that is in your *file_search_maxima* variable and enter *load('ode2singular);* in Maxima.
 The file *ode2singular.wxmx* to be used with wxMaxima contains some examples of equations that can be solved by the program.
+The file *singular_points.pdf* contains some explanations on the algorithm and on the explicit formulas used in the program.
 
 The program tries to determine the singular points of the equation and use this information to solve it.
 If it doesn't succeed the user can propose a change of variable and the program tries to solve the equation with the new variable.
