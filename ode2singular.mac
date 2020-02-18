@@ -26,13 +26,13 @@ ode2singular(p1, p0, dep_var, x):=block([radexpand: all, h_function, q0, argumen
     print("This program tries to find the general solution f to the equation f''+p1*f'+p0*f=0"),
     print("p1 = ", p1),
     print("p0 = ", p0),
-    print("The dependent variable is", dep_var, ", the independent variable is", x),
+	print("The dependent variable is", dep_var, ", the independent variable is", x),
     /*print("Every solution has the form f = h * g, where h = ", h_function),
     print("and g is a solution to g'' + Q * g = 0, where"),
     print("Q = ", factor(q0)),*/
     argument: x,
-    args_list: [p1, p0, q0, argument],
-    determine_singular_points(args_list, h_function, dep_var, x)
+	args_list: [p1, p0, q0, argument],
+	determine_singular_points(args_list, h_function, dep_var, x)
 	)$
 
 
@@ -761,9 +761,9 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
     /*This function assigns
 	dep_var=%k1*h_function*gauss_1(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_2(sol_a,sol_b,sol_c,argument)
     where gauss_1 and gauss_2 are two linearly independent solutions of the hypergeometric equation.
-	The functions gauss_1 and gauss_2 are the hypergeometric function 2F1 or related functions.
-    In the following, the function gauss_a should be replaced by the hypergeometric function 2F1*/
+	The functions gauss_1 and gauss_2 are the hypergeometric function 2F1 or related functions.*/
     print("The solutions can be given in terms of hypergeometric functions."),
+    print("In the following, the function gauss_a should be replaced by the Gauss hypergeometric function."),
 	if asksign(cabs(argument)-1)=neg then
 	    (
         if askinteger(sol_c)=no then 
@@ -773,7 +773,8 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
 		    )
         else
             (
-			/*print("In this case, a fundamental system for the equation has not yet been implemented."),*/
+			print("A fundamental system for this equation has not yet been implemented."),
+            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun §15.5.17, 15.5.19, 15.5.21."),
 		    push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
             )
         )
@@ -786,7 +787,8 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
 			)
 		else
 		    (
-			/*print("In this case, a fundamental system for the equation has not yet been implemented."),*/
+			print("A fundamental system for this equation has not yet been implemented."),
+            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun §15.5.17, 15.5.19, 15.5.21."),
 			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
 			)
 		)
@@ -799,13 +801,14 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
 			)
 		else
 		    (
-			/*print("In this case, a fundamental system for the equation has not yet been implemented."),*/
+			print("A fundamental system for this equation has not yet been implemented."),
+            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun §15.5.17, 15.5.19, 15.5.21."),
 			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
 			)
 		)
 	else
 	    (
-		/*print("In this case, a fundamental system for the equation has not yet been implemented."),*/
+		print("In this case, a fundamental system for the equation has not yet been implemented."),
 		push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
 		)
     )$
