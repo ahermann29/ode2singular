@@ -766,49 +766,78 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
     print("In the following, the function gauss_a should be replaced by the Gauss hypergeometric function."),
 	if asksign(cabs(argument)-1)=neg then
 	    (
-        if askinteger(sol_c)=no then 
+        if sol_a=0 then
+            (
+            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s, 0, argument),answer)
+            )
+        else if sol_b=0 then
+            (
+            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s, 0, argument),answer)
+            )
+        else if askinteger(sol_c)=no then 
 	        (
 			/*[dep_var=%k1*h_function*hypergeometric([sol_a,sol_b],[sol_c],argument)+%k2*h_function*argument^(ratsimp(1-sol_c))*hypergeometric([ratsimp(1+sol_a-sol_c),ratsimp(1+sol_b-sol_c)],[ratsimp(2-sol_c)],argument)]*/
 			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*argument^(ratsimp(1-sol_c))*gauss_a(ratsimp(1+sol_a-sol_c),ratsimp(1+sol_b-sol_c),ratsimp(2-sol_c),argument),answer)
 		    )
+        /*The following cannot be verified by ode_check but seems to be correct by Abramowitz and Stegun Ch. 15.5.17*/
+        /*else if sol_c=1 then
+            (
+            push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*(gauss_a(sol_a,sol_b,sol_c,argument)*log(argument)+sum(pochhammer(sol_a,n)*pochhammer(sol_b,n)*argument^n/(pochhammer(1,n)^2)*(psi[0](sol_a+n)-psi[0](sol_a)+psi[0](sol_b+n)-psi[0](sol_b)-2*psi[0](n+1)+2*psi[0](1)), n, 1, inf)),answer)
+            )*/
         else
             (
-			print("A fundamental system for this equation has not yet been implemented."),
-            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun §15.5.17, 15.5.19, 15.5.21."),
+			print("A fundamental system for this equation in terms of hypergeometric functions has not yet been implemented."),
+            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun Ch. 15.5.17, 15.5.19, 15.5.21."),
 		    push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
             )
         )
 	else if asksign(cabs(1-argument)-1)=neg then
 	    (
-		if askinteger(sol_c-sol_a-sol_b)=no then
+        if sol_a=0 then
+            (
+            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s, 1, argument),answer)
+            )
+        else if sol_b=0 then
+            (
+            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s, 1, argument),answer)
+            )
+		else if askinteger(sol_c-sol_a-sol_b)=no then
 		    (
 			/*[dep_var=%k1*h_function*hypergeometric([sol_a,sol_b],[ratsimp(1+sol_a+sol_b-sol_c)],1-argument)+%k2*h_function*(1-argument)^(ratsimp(sol_c-sol_a-sol_b))*hypergeometric([ratsimp(sol_c-sol_a),ratsimp(sol_c-sol_b)],[ratsimp(1+sol_c-sol_a-sol_b)],1-argument)]*/
 			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,ratsimp(1+sol_a+sol_b-sol_c),1-argument)+%k2*h_function*(1-argument)^(ratsimp(sol_c-sol_a-sol_b))*gauss_a(ratsimp(sol_c-sol_a),ratsimp(sol_c-sol_b),ratsimp(1+sol_c-sol_a-sol_b),1-argument),answer)
 			)
 		else
 		    (
-			print("A fundamental system for this equation has not yet been implemented."),
-            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun §15.5.17, 15.5.19, 15.5.21."),
+			print("A fundamental system for this equation in terms of hypergeometric functions has not yet been implemented."),
+            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun Ch. 15.5.17, 15.5.19, 15.5.21."),
 			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
 			)
 		)
 	else if asksign(cabs(argument)-1)=pos then
 	    (
-		if askinteger(sol_a-sol_b)=no then
+        if sol_a=0 then
+            (
+            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s, inf, argument),answer)
+            )
+        else if sol_b=0 then
+            (
+            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s, inf, argument),answer)
+            )
+		else if askinteger(sol_a-sol_b)=no then
 		    (
 			/*[dep_var=%k1*h_function*argument^(-sol_a)*hypergeometric([sol_a,ratsimp(1+sol_a-sol_c)],[ratsimp(1+sol_a-sol_b)],1/argument)+%k2*h_function*argument^(-sol_b)*hypergeometric([sol_b,ratsimp(1+sol_b-sol_c)],[ratsimp(1+sol_b-sol_a)],1/argument)]*/
 			push(dep_var=%k1*h_function*argument^(-sol_a)*gauss_a(sol_a,ratsimp(1+sol_a-sol_c),ratsimp(1+sol_a-sol_b),1/argument)+%k2*h_function*argument^(-sol_b)*gauss_a(sol_b,ratsimp(1+sol_b-sol_c),ratsimp(1+sol_b-sol_a),1/argument),answer)
 			)
 		else
 		    (
-			print("A fundamental system for this equation has not yet been implemented."),
-            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun §15.5.17, 15.5.19, 15.5.21."),
+			print("A fundamental system for this equation in terms of hypergeometric functions has not yet been implemented."),
+            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun Ch. 15.5.17, 15.5.19, 15.5.21."),
 			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
 			)
 		)
 	else
 	    (
-		print("In this case, a fundamental system for the equation has not yet been implemented."),
+		print("A fundamental system for this equation in terms of hypergeometric functions has not yet been implemented."),
 		push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
 		)
     )$
