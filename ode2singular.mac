@@ -679,7 +679,7 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
                     (
                     sol_nu: ratsimp((-1+radcan(sqrt(ratsimp(1-coeffA))))/2),
                     sol_mu: radcan(sqrt(1-coeffA/4-coeffC/4)),
-					h_function_legendre: 1/sqrt(1-x^2),
+					h_function_legendre: 1/sqrt(x^2-1),
 					m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_legendre),
                     print("The solutions can be expressed in terms of associated Legendre functions."),
                     push(dep_var=%k1*simpl(h_function/m_function_new)*assoc_legendre_p(sol_nu,sol_mu,args_new[4])+%k2*simpl(h_function/m_function_new)*assoc_legendre_q(sol_nu,sol_mu,args_new[4]),answer)
@@ -763,20 +763,22 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
     where gauss_1 and gauss_2 are two linearly independent solutions of the hypergeometric equation.
 	The functions gauss_1 and gauss_2 are the hypergeometric function 2F1 or related functions.*/
     print("The solutions can be given in terms of hypergeometric functions."),
-    print("In the following, the function gauss_a should be replaced by the Gauss hypergeometric function."),
 	if asksign(cabs(argument)-1)=neg then
 	    (
         if sol_a=0 then
             (
-            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s, 0, argument),answer)
+            print("In the following, the limit 0 of the integral may be replaced by any value for which the integral converges."),
+            push(dep_var=%k1*h_function+%k2*h_function*'integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s, 0, argument),answer)
             )
         else if sol_b=0 then
             (
-            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s, 0, argument),answer)
+            print("In the following, the limit 0 of the integral may be replaced by any value for which the integral converges."),
+            push(dep_var=%k1*h_function+%k2*h_function*'integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s, 0, argument),answer)
             )
         else if askinteger(sol_c)=no then 
 	        (
 			/*[dep_var=%k1*h_function*hypergeometric([sol_a,sol_b],[sol_c],argument)+%k2*h_function*argument^(ratsimp(1-sol_c))*hypergeometric([ratsimp(1+sol_a-sol_c),ratsimp(1+sol_b-sol_c)],[ratsimp(2-sol_c)],argument)]*/
+            print("In the following, the function gauss_a should be replaced by the Gauss hypergeometric function."),
 			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*argument^(ratsimp(1-sol_c))*gauss_a(ratsimp(1+sol_a-sol_c),ratsimp(1+sol_b-sol_c),ratsimp(2-sol_c),argument),answer)
 		    )
         /*The following cannot be verified by ode_check but seems to be correct by Abramowitz and Stegun Ch. 15.5.17*/
@@ -787,7 +789,8 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
         else
             (
 			print("A fundamental system for this equation in terms of hypergeometric functions has not yet been implemented."),
-            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun Ch. 15.5.17, 15.5.19, 15.5.21."),
+            print("In the following, the function gauss_a should be replaced by the Gauss hypergeometric function"),
+            print("and the function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun Ch. 15.5.17, 15.5.19, 15.5.21."),
 		    push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
             )
         )
@@ -795,11 +798,13 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
 	    (
         if sol_a=0 then
             (
-            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s, 1, argument),answer)
+            print("In the following, the limit 1 of the integral may be replaced by any value for which the integral converges."),
+            push(dep_var=%k1*h_function+%k2*h_function*'integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s, 1, argument),answer)
             )
         else if sol_b=0 then
             (
-            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s, 1, argument),answer)
+            print("In the following, the limit 1 of the integral may be replaced by any value for which the integral converges."),
+            push(dep_var=%k1*h_function+%k2*h_function*'integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s, 1, argument),answer)
             )
 		else if askinteger(sol_c-sol_a-sol_b)=no then
 		    (
@@ -809,7 +814,8 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
 		else
 		    (
 			print("A fundamental system for this equation in terms of hypergeometric functions has not yet been implemented."),
-            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun Ch. 15.5.17, 15.5.19, 15.5.21."),
+            print("In the following, the function gauss_a should be replaced by the Gauss hypergeometric function."),
+            print("and the function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun Ch. 15.5.17, 15.5.19, 15.5.21."),
 			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
 			)
 		)
@@ -817,11 +823,13 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
 	    (
         if sol_a=0 then
             (
-            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s, inf, argument),answer)
+            print("In the following, the limit inf of the integral may be replaced by any value for which the integral converges."),
+            push(dep_var=%k1*h_function+%k2*h_function*'integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s, inf, argument),answer)
             )
         else if sol_b=0 then
             (
-            push(dep_var=%k1*h_function+%k2*h_function*integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s, inf, argument),answer)
+            print("In the following, the limit inf of the integral may be replaced by any value for which the integral converges."),
+            push(dep_var=%k1*h_function+%k2*h_function*'integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s, inf, argument),answer)
             )
 		else if askinteger(sol_a-sol_b)=no then
 		    (
@@ -831,7 +839,8 @@ hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=bloc
 		else
 		    (
 			print("A fundamental system for this equation in terms of hypergeometric functions has not yet been implemented."),
-            print("The function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun Ch. 15.5.17, 15.5.19, 15.5.21."),
+            print("In the following, the function gauss_a should be replaced by the Gauss hypergeometric function."),
+            print("and the function gauss_b should be replaced by a function that can be found e.g. in Abramowitz and Stegun Ch. 15.5.17, 15.5.19, 15.5.21."),
 			push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_b(sol_a,sol_b,sol_c,argument),answer)
 			)
 		)
