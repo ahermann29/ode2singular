@@ -756,7 +756,7 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
 
 
 legendre_fund_system(dep_var,h_function,sol_nu,sol_mu,argument,answer):=block([],
-    /* realpart(sol_mu)>=0 in order to get numerically satisfactory solutions, see https://dlmf.nist.gov/14.2 */
+    /* see https://dlmf.nist.gov/14.2 */
     if asksign(realpart(sol_mu))=neg then
         (
         sol_mu: -sol_mu
@@ -772,8 +772,8 @@ legendre_fund_system(dep_var,h_function,sol_nu,sol_mu,argument,answer):=block([]
     print("(a fundamental system has not yet been implemented in all cases)"),
     if askinteger(sol_nu-sol_mu)=yes and asksign(sol_nu-sol_mu)=neg then
         (
-        push(dep_var=%k1*h_function*assoc_legendre_p(sol_nu,-sol_mu,argument)
-            +%k2*h_function*assoc_legendre_p(sol_nu,-sol_mu,-argument),answer)
+        push(dep_var=%k1*h_function*assoc_legendre_p(sol_nu,sol_mu,argument)
+            +%k2*h_function*assoc_legendre_p(sol_nu,sol_mu,-argument),answer)
         )
     else
         (
