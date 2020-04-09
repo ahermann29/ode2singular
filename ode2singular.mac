@@ -26,10 +26,10 @@ At the beginning, we have argument=x.
 
 ode2singular(eq, dep_var, x):=block([radexpand: all, eq_new, p2, p1, p0, h_function, q0, argument, args_list, answer],
     eq_new: lhs(eq)-rhs(eq),
-    p2: coeff(eq_new, 'diff(y,x,2)),
-    p1: coeff(eq_new, 'diff(y,x)),
-    p0: coeff(eq_new, y),
-    if ratsimp(eq_new-p2*'diff(y,x,2)-p1*'diff(y,x)-p0*y)#0 then
+    p2: coeff(eq_new, 'diff(dep_var,x,2)),
+    p1: coeff(eq_new, 'diff(dep_var,x)),
+    p0: coeff(eq_new, dep_var),
+    if ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var)#0 then
         (
         print("The function ode2singular cannot be applied since the equation is not linear homogenous of order 2"),
         return([])
@@ -57,10 +57,10 @@ ode2singular(eq, dep_var, x):=block([radexpand: all, eq_new, p2, p1, p0, h_funct
 
 ode2singular_transform(eq, dep_var, x, phi, phi_inv):=block([radexpand: all, eq_new, p2, p1, p0, h_function, q0, argument, args_list, args_new, answer],
     eq_new: lhs(eq)-rhs(eq),
-    p2: coeff(eq_new, 'diff(y,x,2)),
-    p1: coeff(eq_new, 'diff(y,x)),
-    p0: coeff(eq_new, y),
-    if ratsimp(eq_new-p2*'diff(y,x,2)-p1*'diff(y,x)-p0*y)#0 then
+    p2: coeff(eq_new, 'diff(dep_var,x,2)),
+    p1: coeff(eq_new, 'diff(dep_var,x)),
+    p0: coeff(eq_new, dep_var),
+    if ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var)#0 then
         (
         print("The function ode2singular cannot be applied since the equation is not linear homogenous of order 2"),
         return([])
@@ -206,7 +206,7 @@ determine_singular_points(args_list,h_function,dep_var,x):=block([i, fact_data, 
 show_hint(dep_var,x):=block([],
     print("The function ode2singular could not solve the equation."),
     print("If you want to apply a change of variable Phi(",x,") use"),
-    print("ode2singular_transform(p1,p0,",dep_var,",",x,",Phi, Phi_inv) where"),
+    print("ode2singular_transform(eq,",dep_var,",",x,",Phi, Phi_inv) where"),
     print("Phi_inv(",x,") is the inverse function of Phi.")
     )$
 
