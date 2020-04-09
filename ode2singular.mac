@@ -1,62 +1,94 @@
 /*Andreas Hermann 2020*/
-/*This program tries to find the general solution y(x) to the equation y''(x)+p1(x)*y'(x)+p0(x)*y(x)=0.
+/*The function ode2singular tries to find the general solution y(x) to the equation p2(x)*y''(x)+p1(x)*y'(x)+p0(x)*y(x)=0.
 
 Example of usage:
-p1: 1/x;
-p0: 1/x^2;
-ode2singular(p1,p0,y,x);
+p2: x^2$
+p1: x$
+p0: 1$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ode2singular(eq, y, x);
 
 In order to solve the equation with a change of variable replacing x by phi(x):
-p1: 0;
-p0: a-2*q*cos(2*x);
-phi: cos(x);
-phi_inv: acos(x);
-ode2singular_transform(p1,p0,y,x,phi,phi_inv);
+p2: 1$
+p1: 0$
+p0: a-2*q*cos(2*x)$
+phi: cos(x)$
+phi_inv: acos(x)$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ode2singular_transform(eq, y, x, phi, phi_inv);
 
 We write y(x)=h(x)*g(x) such that g(x) satsfies an equation of the form g''(x)+q0(x)*g(x)=0.
-We define args_list: [p1, p0, q0, argument]
+We define args_list: [p1/p2, p0/p2, q0, argument]
 where argument is the current variable.
-At the beginning argument=x.
+At the beginning, we have argument=x.
 */
 
 
-ode2singular(p1, p0, dep_var, x):=block([radexpand: all, h_function, q0, argument, args_list, answer],
-    h_function: radcan(exp(-integrate(p1,x)/2)),
-    q0: ratsimp(-diff(p1,x)/2 - p1^2/4 + p0),
-    print("This program tries to find the general solution f to the equation f''+p1*f'+p0*f=0"),
-    print("p1 = ", p1),
-    print("p0 = ", p0),
-    print("The dependent variable is", dep_var, ", the independent variable is", x),
-    /*print("Every solution has the form f = h * g, where h = ", h_function),
-    print("and g is a solution to g'' + Q * g = 0, where"),
-    print("Q = ", factor(q0)),*/
-    argument: x,
-    args_list: [p1, p0, q0, argument],
-    answer: determine_singular_points(args_list, h_function, dep_var, x),
-    return(answer)
+ode2singular(eq, dep_var, x):=block([radexpand: all, eq_new, p2, p1, p0, h_function, q0, argument, args_list, answer],
+    eq_new: lhs(eq)-rhs(eq),
+    p2: coeff(eq_new, 'diff(y,x,2)),
+    p1: coeff(eq_new, 'diff(y,x)),
+    p0: coeff(eq_new, y),
+    if ratsimp(eq_new-p2*'diff(y,x,2)-p1*'diff(y,x)-p0*y)#0 then
+        (
+        print("The function ode2singular cannot be applied since the equation is not linear homogenous of order 2"),
+        return([])
+        )
+    else
+        (
+        p1: ratsimp(p1/p2),
+        p0: ratsimp(p0/p2),
+        h_function: radcan(exp(-integrate(p1,x)/2)),
+        q0: ratsimp(-diff(p1,x)/2 - p1^2/4 + p0),
+        print("This function tries to find the general solution f to the equation f''+p1*f'+p0*f=0"),
+        print("p1 = ", p1),
+        print("p0 = ", p0),
+        print("The dependent variable is", dep_var, ", the independent variable is", x),
+        /*print("Every solution has the form f = h * g, where h = ", h_function),
+        print("and g is a solution to g'' + Q * g = 0, where"),
+        print("Q = ", factor(q0)),*/
+        argument: x,
+        args_list: [p1, p0, q0, argument],
+        answer: determine_singular_points(args_list, h_function, dep_var, x),
+        return(answer)
+        )
     )$
 
 
-ode2singular_transform(p1, p0, dep_var, x, phi, phi_inv):=block([radexpand: all, h_function, q0, argument, args_list, args_new, answer],
-    h_function: radcan(exp(-integrate(p1,x)/2)),
-    q0: ratsimp(-diff(p1,x)/2 - p1^2/4 + p0),
-    print("This program tries to find the general solution f to the equation f''+p1*f'+p0*f=0"),
-    print("p1= ", p1),
-    print("p0= ", p0),
-    print("The dependent variable is", dep_var, ", the independent variable is", x),
-    /*print("Every solution has the form f = h * g, where h = ", h_function),
-    print("and g is a solution to g'' + Q * g = 0, where"),
-    print("Q = ", factor(q0)),*/
-    argument: x,
-    args_list: [p1, p0, q0, argument],
-    args_new: inv_transform(args_list, phi, phi_inv, x),
-    args_new[2]: ratsimp(trigexpand(args_new[2])),
-    args_new[1]: ratsimp(trigexpand(args_new[1])),
-    args_new[3]: ratsimp(trigexpand(args_new[3])),
-    args_new[4]: ratsimp(trigexpand(args_new[4])),
-    /*print("new list: ", args_new),*/
-    answer: determine_singular_points(args_new, h_function, dep_var, x),
-    return(answer)
+ode2singular_transform(eq, dep_var, x, phi, phi_inv):=block([radexpand: all, eq_new, p2, p1, p0, h_function, q0, argument, args_list, args_new, answer],
+    eq_new: lhs(eq)-rhs(eq),
+    p2: coeff(eq_new, 'diff(y,x,2)),
+    p1: coeff(eq_new, 'diff(y,x)),
+    p0: coeff(eq_new, y),
+    if ratsimp(eq_new-p2*'diff(y,x,2)-p1*'diff(y,x)-p0*y)#0 then
+        (
+        print("The function ode2singular cannot be applied since the equation is not linear homogenous of order 2"),
+        return([])
+        )
+    else
+        (
+        p1: ratsimp(p1/p2),
+        p0: ratsimp(p0/p2),
+        h_function: radcan(exp(-integrate(p1,x)/2)),
+        q0: ratsimp(-diff(p1,x)/2 - p1^2/4 + p0),
+        print("This function tries to find the general solution f to the equation f''+p1*f'+p0*f=0"),
+        print("p1= ", p1),
+        print("p0= ", p0),
+        print("The dependent variable is", dep_var, ", the independent variable is", x),
+        /*print("Every solution has the form f = h * g, where h = ", h_function),
+        print("and g is a solution to g'' + Q * g = 0, where"),
+        print("Q = ", factor(q0)),*/
+        argument: x,
+        args_list: [p1, p0, q0, argument],
+        args_new: inv_transform(args_list, phi, phi_inv, x),
+        args_new[2]: ratsimp(trigexpand(args_new[2])),
+        args_new[1]: ratsimp(trigexpand(args_new[1])),
+        args_new[3]: ratsimp(trigexpand(args_new[3])),
+        args_new[4]: ratsimp(trigexpand(args_new[4])),
+        /*print("new list: ", args_new),*/
+        answer: determine_singular_points(args_new, h_function, dep_var, x),
+        return(answer)
+        )
     )$
 
 
@@ -172,7 +204,7 @@ determine_singular_points(args_list,h_function,dep_var,x):=block([i, fact_data, 
 
 
 show_hint(dep_var,x):=block([],
-    print("The program could not solve the equation."),
+    print("The function ode2singular could not solve the equation."),
     print("If you want to apply a change of variable Phi(",x,") use"),
     print("ode2singular_transform(p1,p0,",dep_var,",",x,",Phi, Phi_inv) where"),
     print("Phi_inv(",x,") is the inverse function of Phi.")
@@ -195,7 +227,7 @@ simpl(f):=block([],
     return(factor(ratsimp(radcan(f))))
     )$
 
-
+/* simplify and remove multiplicative constants */
 simpl_2(f,x):=block([logexpand: all, g],
     g: simpl(f),
     g: diff(log(g),x),
