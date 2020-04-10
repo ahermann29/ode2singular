@@ -29,9 +29,9 @@ ode2singular(eq, dep_var, x):=block([radexpand: all, eq_new, p2, p1, p0, h_funct
     p2: coeff(eq_new, 'diff(dep_var,x,2)),
     p1: coeff(eq_new, 'diff(dep_var,x)),
     p0: coeff(eq_new, dep_var),
-    if ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var)#0 then
+    if ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var)#0 or p2=0 then
         (
-        print("The function ode2singular cannot be applied since the equation is not linear homogenous of order 2"),
+        print("The function ode2singular cannot solve this equation since it is not linear homogenous of order 2"),
         return([])
         )
     else
@@ -60,9 +60,9 @@ ode2singular_transform(eq, dep_var, x, phi, phi_inv):=block([radexpand: all, eq_
     p2: coeff(eq_new, 'diff(dep_var,x,2)),
     p1: coeff(eq_new, 'diff(dep_var,x)),
     p0: coeff(eq_new, dep_var),
-    if ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var)#0 then
+    if ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var)#0 or p2=0 then
         (
-        print("The function ode2singular cannot be applied since the equation is not linear homogenous of order 2"),
+        print("The function ode2singular cannot solve this equation since it is not linear homogenous of order 2"),
         return([])
         )
     else
@@ -189,26 +189,33 @@ determine_singular_points(args_list,h_function,dep_var,x):=block([i, fact_data, 
         else
             (
             /*print("The equation cannot be reduced to any of the equations implemented so far."),*/
-            show_hint(dep_var,x),
+            /*show_hint(dep_var,x),*/
             answer: []
             )
         )
     else
         (
         print("Error: Could not factor the denominator of Q=",args_list[3]),
-        show_hint(dep_var,x),
+        /*show_hint(dep_var,x),*/
         answer: []
+        ),
+    if answer=[] then
+        (
+        print("The function ode2singular could not solve the equation."),
+        print("If you want to apply a change of variable Phi(",x,") use"),
+        print("ode2singular_transform(",eq,",",dep_var,",",x,",Phi, Phi_inv) where"),
+        print("Phi_inv(",x,") is the inverse function of Phi.")
         ),
     return(answer)
     )$
 
 
-show_hint(dep_var,x):=block([],
+/*show_hint(dep_var,x):=block([],
     print("The function ode2singular could not solve the equation."),
     print("If you want to apply a change of variable Phi(",x,") use"),
     print("ode2singular_transform(eq,",dep_var,",",x,",Phi, Phi_inv) where"),
     print("Phi_inv(",x,") is the inverse function of Phi.")
-    )$
+    )$*/
 
 
 complex_sqrt(re,im):=block([sol_re,sol_im],
@@ -239,8 +246,9 @@ solve_const_coeff(args_list,h_function,dep_var,x):=block([re, im, sol, h_functio
     answer: [],
     if diff(args_list[3],x)#0 then
         (
-        print("Error: The function solve_const_coeff should only be called if Q is constant."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_const_coeff should only be called if Q is constant.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else
         (
@@ -281,13 +289,15 @@ solve_power(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([beta, co
     answer: [],
     if length(reg_sing)#2 or length(irreg_sing)#0 then 
         (
-        print("Error: The function solve_power should only be called in case of 2 regular singular points and 0 irregular singular points."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_power should only be called in case of 2 regular singular points and 0 irregular singular points.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else if rhs(reg_sing[1])#inf and rhs(reg_sing[2])#inf then
         (
-        print("Error: The function solve_power should only be called if inf is a regular singular point."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_power should only be called if inf is a regular singular point.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else
         (
@@ -302,8 +312,9 @@ solve_power(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([beta, co
         coeffC: ratsimp(args_list[3]*(x-beta)^2),
         if diff(coeffC,x)#0 then
             (
-            print("Error: The function solve_power should not be called if Q(x) is not of the form C/(x-beta)^2 with C constant."),
-            show_hint(dep_var,x)
+            print("Error: The function solve_power should not be called if Q(x) is not of the form C/(x-beta)^2 with C constant.")
+            /*show_hint(dep_var,x)
+            return(answer)*/
             )
         else
             (
@@ -372,7 +383,7 @@ solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_dat
         args_new: inv_transform(args_list, phi, phi_inv, x),
         m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_bessel),
         print("The solutions can be expressed in terms of Bessel functions"),
-        print("with parameter a =", sol_a),
+        /*print("with parameter a =", sol_a),*/
         push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*bessel_j(sol_a,args_new[4])
             +%k2*simpl_2(h_function/m_function_new,x)*bessel_y(sol_a,args_new[4]), answer)
         ),
@@ -389,7 +400,7 @@ solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_dat
             if exponent=2 and askinteger(lambda)=yes then
                 (
                 print("The solutions can be expressed in terms of Hermite polynomials"),
-                print("with parameter lambda =", lambda, " and confluent hypergeometric functions."),
+                print("of degree ", lambda, " and confluent hypergeometric functions."),
                 alpha: (-coeffA)^(1/4),
                 h_function_hermite: exp(x^2/2),
                 phi: alpha*(x-z0),
@@ -423,8 +434,9 @@ solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_dat
             )
         else
             (
-            print("Error: The function_parabolic_cylinder cannot find a solution."),
-            show_hint(dep_var,x)
+            print("Error: The function_parabolic_cylinder cannot find a solution.")
+            /*show_hint(dep_var,x)
+            return(answer)*/
             )
         ),
     return(answer)
@@ -439,7 +451,7 @@ kummer_fund_system(dep_var, h_function, sol_a, sol_b, argument, answer):=block([
     if askinteger(sol_a)=yes and asksign(sol_a)#pos then
         (
         print("The solutions can be expressed in terms of generalized Laguerre polynomials"),
-        print("with parameters n =", -sol_a, ", a =", ratsimp(sol_b-1), " and confluent hypergeometric functions."),
+        print("of degree ", -sol_a, " with parameter ", ratsimp(sol_b-1), " and confluent hypergeometric functions."),
         if askinteger(sol_b)=no then 
             (
             push(dep_var=%k1*simpl_2(h_function*gen_laguerre(-sol_a,ratsimp(sol_b-1),argument),x)
@@ -486,13 +498,15 @@ solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=bloc
     answer: [],
     if length(reg_sing)#1 or length(irreg_sing)#1 then 
         (
-        print("Error: The function solve_bessel_or_kummer should only be called in case of 1 regular singular point and 1 irregular singular point."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_bessel_or_kummer should only be called in case of 1 regular singular point and 1 irregular singular point.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else if (rhs(reg_sing[1])=inf and rhs(irreg_sing[1])=inf) or (rhs(reg_sing[1])#inf and rhs(irreg_sing[1])#inf) then
         (
-        print("Error: The function solve_bessel_or_kummer only works if infinity is either a regular or an irregular singular point."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_bessel_or_kummer only works if infinity is either a regular or an irregular singular point.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else
         (
@@ -513,8 +527,9 @@ solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=bloc
         exponent: det_data[4],
         if diff(nm,x)=0 or exponent=inf or ratsimp(exponent)=0 then 
             (
-            print("Error: The function solve_bessel_or_kummer only works if Q(x) is of the form P(x)/(4*(x-beta)^2) where P is of the form A*(x-beta)^(2*k)+B*(x-beta)^k*C with k not zero and A, B not both zero."),
-            show_hint(dep_var,x)
+            print("Error: The function solve_bessel_or_kummer only works if Q(x) is of the form P(x)/(4*(x-beta)^2) where P is of the form A*(x-beta)^(2*k)+B*(x-beta)^k*C with k not zero and A, B not both zero.")
+            /*show_hint(dep_var,x)
+            return(answer)*/
             )
         else
             (
@@ -541,7 +556,7 @@ solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=bloc
                 args_new: inv_transform(args_list, phi, phi_inv, x),
                 m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_bessel),
                 print("The solutions can be expressed in terms of Bessel functions"),
-                print("with parameter a =", sol_a),
+                /*print("with parameter a =", sol_a),*/
                 if askinteger(sol_a)=yes then
                     (
                     push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*bessel_j(sol_a,args_new[4])
@@ -553,7 +568,7 @@ solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=bloc
                         +%k2*simpl_2(h_function/m_function_new,x)*bessel_j(-sol_a,args_new[4]), answer)
                     ),
                 /* due to different notational conventions for exponent in the cases coeffB=0 and coeffB#0
-                we need to do the following */
+                we need to divide exponent by 2 for the expression in terms of confluent hypergeometric functions*/
                 exponent: exponent/2
                 ),
             /*---------------------------------------------------------------
@@ -578,18 +593,21 @@ solve_bessel_or_kummer_mobius_or_spheroid(args_list,h_function,dep_var,x,reg_sin
     answer: [],
     if length(reg_sing)#2 or length(irreg_sing)#1 then 
         (
-        print("Error: The function solve_bessel_or_kummer_mobius_or_spheroid should only be called in case of 2 regular singular points and 1 irregular singular point."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_bessel_or_kummer_mobius_or_spheroid should only be called in case of 2 regular singular points and 1 irregular singular point.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else if reg_sing[1]=reg_sing[2] or reg_sing[1]=irreg_sing[1] or reg_sing[2]=irreg_sing[1] then 
         (
-        print("Error: The function solve_bessel_or_kummer_mobius_or_spheroid only works if the equation has 3 distinct singular points."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_bessel_or_kummer_mobius_or_spheroid only works if the equation has 3 distinct singular points.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else if rhs(reg_sing[1])#inf and rhs(reg_sing[2])#inf and rhs(irreg_sing[1])#inf then
         (
-        print("Error: The function solve_bessel_or_kummer_mobius_or_spheroid only works if infinity is a singular point."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_bessel_or_kummer_mobius_or_spheroid only works if infinity is a singular point.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else if rhs(irreg_sing[1])=inf then
         (
@@ -637,13 +655,15 @@ solve_spheroid(args_list,h_function,dep_var,x,reg_sing):=block([args_new, answer
     q0_mult: ratsimp(args_new[3]*4*(x-1)^2*(x+1)^2),
     if diff(q0_mult,x,5)#0 then
         (
-        print("The equation cannot be reduced to a spheroidal wave equation."),
-        show_hint(dep_var,x)
+        print("The equation cannot be reduced to a spheroidal wave equation.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else if coeff(q0_mult,x,3)#0 or coeff(q0_mult,x,1)#0 then
         (
-        print("The equation cannot be reduced to a spheroidal wave equation."),
-        show_hint(dep_var,x)
+        print("The equation cannot be reduced to a spheroidal wave equation.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else
         (
@@ -679,18 +699,21 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
     answer: [],
     if length(reg_sing)#3 or length(reg_mult)#3 or length(irreg_sing)#0 then 
         (
-        print("Error: The function solve_legendre_or_hypergeo only works if the equation has 3 regular singular points and 0 irregular singular points."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_legendre_or_hypergeo only works if the equation has 3 regular singular points and 0 irregular singular points.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else if reg_sing[1]=reg_sing[2] or reg_sing[1]=reg_sing[3] or reg_sing[2]=reg_sing[3] then 
         (
-        print("Error: The function solve_legendre_or_hypergeo only works if the equation has 3 distinct regular singular points."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_legendre_or_hypergeo only works if the equation has 3 distinct regular singular points.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else if rhs(reg_sing[1])#inf and rhs(reg_sing[2])#inf and rhs(reg_sing[3])#inf then 
         (
-        print("Error: The function solve_legendre_or_hypergeo only works if the equation has a regular singular point at infinity."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_legendre_or_hypergeo only works if the equation has a regular singular point at infinity.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     /*-----------------------------------------------------------------------------------------------
     In the remaining case exactly one element in reg_sing is x=inf
@@ -750,8 +773,9 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
             nm: expand(ratsimp(args_new[3]*4*(x^2-1)^2)),
             if diff(nm,x,3)#0 then
                 (
-                print("Error: The function Q passed to solve_legendre_or_hypergeo does not have infinity as a regular singular point."),
-                show_hint(dep_var,x)
+                print("Error: The function Q passed to solve_legendre_or_hypergeo does not have infinity as a regular singular point.")
+                /*show_hint(dep_var,x)
+                return(answer)*/
                 )
             else
                 (
@@ -799,8 +823,9 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
             nm: expand(ratsimp(args_new[3]*4*x^2*(x-1)^2)),
             if diff(nm,x,3)#0 then
                 (
-                print("Error: The function Q passed to solve_legendre_or_hypergeo does not have infinity as a regular singular point."),
-                show_hint(dep_var,x)
+                print("Error: The function Q passed to solve_legendre_or_hypergeo does not have infinity as a regular singular point.")
+                /*show_hint(dep_var,x)
+                return(answer)*/
                 )
             else
                 (
@@ -820,8 +845,9 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
                     sol_b: radcan(sol_a-sqrt(ratsimp(1-coeffA))),
                     if ratsimp(1-(sol_a-sol_b)^2-coeffA)#0 or ratsimp((1-sol_a-sol_b)*sol_c*2+4*sol_a*sol_b+coeffB)#0 or ratsimp(sol_c^2-2*sol_c+coeffC)#0 then
                         (
-                        print("Error: The function solve_hypergeo could not determine the coefficients"),
-                        show_hint(dep_var,x)
+                        print("Error: The function solve_hypergeo could not determine the coefficients")
+                        /*show_hint(dep_var,x)
+                        return(answer)*/
                         )
                     else
                         (
@@ -858,7 +884,7 @@ legendre_fund_system(dep_var,h_function,sol_nu,sol_mu,argument,answer):=block([]
         ),
     /* thus we may assume nu + mu not in {-1, -2, ...}  */
     print("The solutions can be expressed in terms of associated Legendre functions"),
-    print("with parameters mu =", sol_mu, ", nu =", sol_nu),
+    print("of degree ", sol_nu, " and order ", sol_mu),
     print("(a fundamental system has not yet been implemented in all cases)"),
     if askinteger(sol_nu-sol_mu)=yes and asksign(sol_nu-sol_mu)=neg then
         (
@@ -1070,13 +1096,15 @@ solve_4_reg_sing(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([dum
     answer: [],
     if length(reg_sing)#4 or length(irreg_sing)#0 then
         (
-        print("Error: The function solve_4_reg_sing only works for 4 regular singular points and 0 irregular singular points."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_4_reg_sing only works for 4 regular singular points and 0 irregular singular points.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else if reg_sing[1]=reg_sing[2] or reg_sing[1]=reg_sing[3] or reg_sing[1]=reg_sing[4] or reg_sing[2]=reg_sing[3] or reg_sing[2]=reg_sing[4] or reg_sing[3]=reg_sing[4] then
         (
-        print("Error: The function solve_4_reg_sing only works if the equation has 4 distinct regular singular points."),
-        show_hint(dep_var,x)
+        print("Error: The function solve_4_reg_sing only works if the equation has 4 distinct regular singular points.")
+        /*show_hint(dep_var,x)
+        return(answer)*/
         )
     else
         (
@@ -1096,8 +1124,9 @@ solve_4_reg_sing(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([dum
         q0_mult: ratsimp(args_list[3]*(x-rhs(reg_sing[2]))^2*(x-rhs(reg_sing[3]))^2*(x-rhs(reg_sing[4]))^2),
         if diff(q0_mult,x,3)#0 then
             (
-            print("Error: The function solve_4_reg_sing only works if the numerator of Q(x) is a polynomial function of degree at most 2."),
-            show_hint(dep_var,x)
+            print("Error: The function solve_4_reg_sing only works if the numerator of Q(x) is a polynomial function of degree at most 2.")
+            /*show_hint(dep_var,x)
+            return(answer)*/
             )
         else
             (
