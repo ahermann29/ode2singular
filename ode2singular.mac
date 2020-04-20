@@ -18,28 +18,37 @@ eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
 ode2singular_transform(eq, y, x, phi, phi_inv);
 
 We write y(x)=h(x)*g(x) such that g(x) satsfies an equation of the form g''(x)+q0(x)*g(x)=0.
-We define args_list: [p1/p2, p0/p2, q0, argument]
-where argument is the current variable.
+We define args_list: [p1/p2, p0/p2, q0, argument, inhom]
+where argument is the current variable and inhom is the inhomogeneity of the equation.
 At the beginning, we have argument=x.
+At the moment, only homogeneous equations can be solved.
 */
 
 
-ode2singular(eq, dep_var, x):=block([radexpand: all, eq_new, p2, p1, p0, h_function, q0, argument, args_list, answer],
+ode2singular(eq, dep_var, x):=block([radexpand: all, eq_new, p2, p1, p0, inhom, h_function, q0, argument, args_list, answer],
     eq_new: lhs(eq)-rhs(eq),
     p2: coeff(eq_new, 'diff(dep_var,x,2)),
     p1: coeff(eq_new, 'diff(dep_var,x)),
     p0: coeff(eq_new, dep_var),
-    if ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var)#0 or p2=0 then
+    inhom: ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var),
+    /* condition for inhomogeneous equation:  if freeof(dep_var,inhom)=false or p2=0 then .....
+    inhomogeneity of the origninal equation:  inhom: ratsimp(-inhom/p2)
+    inhomogeneity ot the Q-form equation:     inhom: ratsimp(inhom/h_function) */
+    /*if inhom#0 or ratsimp(p2)=0 then*/
+    if freeof(dep_var,inhom)=false or ratsimp(p2)=0 then
         (
-        print("The function ode2singular cannot solve this equation since it is not linear homogenous of order 2"),
+        print("The function ode2singular cannot solve this equation since it is not linear of order 2"),
+        /* homogeneous */
         return([])
         )
     else
         (
         p1: ratsimp(p1/p2),
         p0: ratsimp(p0/p2),
+        inhom: ratsimp(-inhom/p2),
         h_function: radcan(exp(-integrate(p1,x)/2)),
         q0: ratsimp(-diff(p1,x)/2 - p1^2/4 + p0),
+        inhom: ratsimp(inhom/h_function),
         /*print("This function tries to find the general solution f to the equation f''+p1*f'+p0*f=0"),
         print("p1 = ", factor(p1)),
         print("p0 = ", factor(p0)),
@@ -48,29 +57,37 @@ ode2singular(eq, dep_var, x):=block([radexpand: all, eq_new, p2, p1, p0, h_funct
         print("and g is a solution to g'' + Q * g = 0, where"),
         print("Q = ", factor(q0)),*/
         argument: x,
-        args_list: [p1, p0, q0, argument],
+        args_list: [p1, p0, q0, argument, inhom],
         answer: determine_singular_points(args_list, h_function, dep_var, x),
         return(answer)
         )
     )$
 
 
-ode2singular_transform(eq, dep_var, x, phi, phi_inv):=block([radexpand: all, eq_new, p2, p1, p0, h_function, q0, argument, args_list, args_new, answer],
+ode2singular_transform(eq, dep_var, x, phi, phi_inv):=block([radexpand: all, eq_new, p2, p1, p0, inhom, h_function, q0, argument, args_list, args_new, answer],
     eq_new: lhs(eq)-rhs(eq),
     p2: coeff(eq_new, 'diff(dep_var,x,2)),
     p1: coeff(eq_new, 'diff(dep_var,x)),
     p0: coeff(eq_new, dep_var),
-    if ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var)#0 or p2=0 then
+    inhom: ratsimp(eq_new-p2*'diff(dep_var,x,2)-p1*'diff(dep_var,x)-p0*dep_var),
+    /* condition for inhomogeneous equation:  if freeof(dep_var,inhom)=false or p2=0 then .....
+    inhomogeneity of the origninal equation:  inhom: ratsimp(-inhom/p2)
+    inhomogeneity ot the Q-form equation:     inhom: ratsimp(inhom/h_function) */
+    /*if inhom#0 or p2=0 then*/
+    if freeof(dep_var,inhom)=false or ratsimp(p2)=0 then
         (
-        print("The function ode2singular cannot solve this equation since it is not linear homogenous of order 2"),
+        print("The function ode2singular cannot solve this equation since it is not linear of order 2"),
+        /*homogeneous*/
         return([])
         )
     else
         (
         p1: ratsimp(p1/p2),
         p0: ratsimp(p0/p2),
+        inhom: ratsimp(-inhom/p2),
         h_function: radcan(exp(-integrate(p1,x)/2)),
         q0: ratsimp(-diff(p1,x)/2 - p1^2/4 + p0),
+        inhom: ratsimp(inhom/h_function),
         /*print("This function tries to find the general solution f to the equation f''+p1*f'+p0*f=0"),
         print("p1= ", factor(p1)),
         print("p0= ", factor(p0)),
@@ -79,12 +96,14 @@ ode2singular_transform(eq, dep_var, x, phi, phi_inv):=block([radexpand: all, eq_
         print("and g is a solution to g'' + Q * g = 0, where"),
         print("Q = ", factor(q0)),*/
         argument: x,
-        args_list: [p1, p0, q0, argument],
+        args_list: [p1, p0, q0, argument, inhom],
         args_new: inv_transform(args_list, phi, phi_inv, x),
         args_new[2]: ratsimp(trigexpand(args_new[2])),
         args_new[1]: ratsimp(trigexpand(args_new[1])),
         args_new[3]: ratsimp(trigexpand(args_new[3])),
         args_new[4]: ratsimp(trigexpand(args_new[4])),
+        args_new[5]: ratsimp(trigexpand(args_new[5])),
+        /* maybe include the lines "args_new[i]: ratsimp(trigexpand(args_new[i]))," in the function inv_transform ??? */
         /*print("new list: ", args_new),*/
         answer: determine_singular_points(args_new, h_function, dep_var, x),
         return(answer)
@@ -128,12 +147,12 @@ determine_singular_points(args_list,h_function,dep_var,x):=block([i, fact_data, 
         point, otherwise it is an irregular singular point.
         x=inf will be the first item in the list reg_sing or irreg_sing respectively
         -----------------------------------------------------------------------------------------------*/
-        lim_inf: abs(limit(simpl_2(x^2*args_list[3],x),x,inf)),
-        lim_minf: abs(limit(simpl_2(x^2*args_list[3],x),x,minf)),
-        print("q0=", args_list[3]),
+        lim_inf: abs(limit(x^2*args_list[3],x,inf)),
+        lim_minf: abs(limit(x^2*args_list[3],x,minf)),
+        /*print("q0=", args_list[3]),
         print("lim_inf=", lim_inf),
-        print("lim_minf=", lim_minf),
-        if lim_inf#inf and lim_minf#inf and lim_inf#und and lim_minf#und and lim_inf#infinity and lim_minf#infinity then
+        print("lim_minf=", lim_minf),*/
+        if lim_inf#inf and lim_minf#inf and lim_inf#und and lim_minf#und then
             (
             push(x=inf,reg_sing),
             /*We don't determine the multiplicity of infinity.*/
@@ -250,7 +269,19 @@ simpl_2(f,x):=block([logexpand: all, g],
     )$
 
 
-solve_const_coeff(args_list,h_function,dep_var,x):=block([re, im, sol, h_function_const, m_function, answer],
+write_solution(args_list, dep_var, x, f_1, f_2, answer):=block([sol],
+    sol: %k1*f_1+%k2*f_2,
+    if(args_list[5]#0) then
+        (
+        print("This equation is inhomogeneous. ode2singular can only solve the homogeneous equation.")
+        /* TODO: add a special solution of the inhomogeneous equation to sol */
+        ),
+    push(dep_var=sol, answer),
+    return(answer)
+    )$
+
+
+solve_const_coeff(args_list,h_function,dep_var,x):=block([re, im, sol, h_function_const, m_function, f_1, f_2, answer],
     answer: [],
     if diff(args_list[3],x)#0 then
         (
@@ -266,32 +297,33 @@ solve_const_coeff(args_list,h_function,dep_var,x):=block([re, im, sol, h_functio
             (
             if asksign(re)=pos then
                 (
-                push(dep_var=%k1*simpl_2(h_function/m_function,x)*cos(sqrt(re)*args_list[4])
-                    +%k2*simpl_2(h_function/m_function,x)*sin(sqrt(re)*args_list[4]), answer)
+                f_1: simpl_2(h_function/m_function,x)*cos(sqrt(re)*args_list[4]),
+                f_2: simpl_2(h_function/m_function,x)*sin(sqrt(re)*args_list[4])
                 )
             else if asksign(re)=neg then 
                 (
-                push(dep_var=%k1*simpl_2(h_function/m_function*exp(sqrt(-re)*args_list[4]),x)
-                    +%k2*simpl_2(h_function/m_function*exp(-sqrt(-re)*args_list[4]),x), answer)
+                f_1: simpl_2(h_function/m_function*exp(sqrt(-re)*args_list[4]),x),
+                f_2: simpl_2(h_function/m_function*exp(-sqrt(-re)*args_list[4]),x)
                 )
             else
                 (
-                push(dep_var=%k1*simpl_2(h_function/m_function*args_list[4],x)
-                    +%k2*simpl_2(h_function/m_function,x), answer)
+                f_1: simpl_2(h_function/m_function*args_list[4],x),
+                f_2: simpl_2(h_function/m_function,x)
                 )
             )
         else
             (
             sol: complex_sqrt(-re,-im),
-            push(dep_var=%k1*simpl_2(h_function/m_function*exp(sol*args_list[4]),x)
-                +%k2*simpl_2(h_function/m_function*exp(-sol*args_list[4]),x), answer)
+            f_1: simpl_2(h_function/m_function*exp(sol*args_list[4]),x),
+            f_2: simpl_2(h_function/m_function*exp(-sol*args_list[4]),x)
             )
         ),
+    answer: write_solution(args_list, dep_var, x, f_1, f_2, answer),
     return(answer)
     )$
 
 
-solve_power(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([beta, coeffC, h_function_power, phi, phi_inv, args_new, m_function_new, discrim, answer],
+solve_power(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([beta, coeffC, h_function_power, phi, phi_inv, args_new, m_function_new, discrim, f_1, f_2, answer],
     answer: [],
     if length(reg_sing)#2 or length(irreg_sing)#0 then 
         (
@@ -325,36 +357,36 @@ solve_power(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([beta, co
             m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_power),
             if coeffC=1/4 then
                 (
-                push(dep_var=%k1*simpl_2(h_function/m_function_new*sqrt(args_new[4]),x)
-                    +%k2*simpl_2(h_function/m_function_new*sqrt(args_new[4])*log(args_new[4]),x), answer)
+                f_1: simpl_2(h_function/m_function_new*sqrt(args_new[4]),x),
+                f_2: simpl_2(h_function/m_function_new*sqrt(args_new[4])*log(args_new[4]),x)
                 )
             else
                 (
                 discrim: complex_sqrt(1-4*realpart(coeffC),-4*imagpart(coeffC)),
                 if imagpart(discrim)=0 then
                     (
-                    push(dep_var=%k1*simpl_2(h_function/m_function_new*args_new[4]^((1+discrim)/2),x)
-                        +%k2*simpl_2(h_function/m_function_new*args_new[4]^((1-discrim)/2),x), answer)
+                    f_1: simpl_2(h_function/m_function_new*args_new[4]^((1+discrim)/2),x),
+                    f_2: simpl_2(h_function/m_function_new*args_new[4]^((1-discrim)/2),x)
                     )
                 else if realpart(discrim)=0 then
                     (
-                    push(dep_var=%k1*simpl_2(h_function/m_function_new*args_new[4]^((1+realpart(discrim))/2),x)*cos(imagpart(discrim)/2*log(args_new[4]))
-                        +%k2*simpl_2(h_function/m_function_new*args_new[4]^((1+realpart(discrim))/2),x)*sin(imagpart(discrim)/2*log(args_new[4])), answer)
+                    f_1: simpl_2(h_function/m_function_new*args_new[4]^((1+realpart(discrim))/2),x)*cos(imagpart(discrim)/2*log(args_new[4])),
+                    f_2: simpl_2(h_function/m_function_new*args_new[4]^((1+realpart(discrim))/2),x)*sin(imagpart(discrim)/2*log(args_new[4]))
                     )
                 else
                     (
-                    push(dep_var=%k1*simpl_2(h_function/m_function_new*args_new[4]^((1+realpart(discrim))/2)*(cos(imagpart(discrim)/2*log(args_new[4]))+%i*sin(imagpart(discrim)/2*log(args_new[4]))),x)
-                        +%k2*simpl_2(h_function/m_function_new*args_new[4]^((1-realpart(discrim))/2)*(cos(imagpart(discrim)/2*log(args_new[4]))-%i*sin(imagpart(discrim)/2*log(args_new[4]))),x), answer)
-                    /*[dep_var=%k1*ratsimp(radcan(h_function/m_function_new*exp((1+discrim)/2*log(args_new[4]))))+%k2*ratsimp(radcan(h_function/m_function_new*exp((1-discrim)/2*log(args_new[4]))))]*/
+                    f_1: simpl_2(h_function/m_function_new*args_new[4]^((1+realpart(discrim))/2)*(cos(imagpart(discrim)/2*log(args_new[4]))+%i*sin(imagpart(discrim)/2*log(args_new[4]))),x),
+                    f_2: simpl_2(h_function/m_function_new*args_new[4]^((1-realpart(discrim))/2)*(cos(imagpart(discrim)/2*log(args_new[4]))-%i*sin(imagpart(discrim)/2*log(args_new[4]))),x)
                     )
                 )
             )
         ),
+    answer: write_solution(args_new, dep_var, x, f_1, f_2, answer),
     return(answer)
     )$
 
 
-solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_data, coeffA, coeffC, exponent, z0, alpha, k, sol_a, sol_b, lambda, phi, phi_inv, args_new, m_function_new, h_function_airy, h_function_bessel, h_function_hermite, h_function_kummer],
+solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, f_1, f_2, det_data, coeffA, coeffC, exponent, z0, alpha, k, sol_a, sol_b, lambda, phi, phi_inv, args_new, m_function_new, h_function_airy, h_function_bessel, h_function_hermite, h_function_kummer],
     answer: [],
     det_data: determine_coeff_1(args_list[3],x),
     coeffA: det_data[1],
@@ -369,8 +401,9 @@ solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_dat
         args_new: inv_transform(args_list, phi, phi_inv, x),
         m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_airy),
         print("The solutions can be expressed in terms of Airy functions."),
-        push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*airy_ai(args_new[4])
-            +%k2*simpl_2(h_function/m_function_new,x)*airy_bi(args_new[4]), answer)
+        f_1: simpl_2(h_function/m_function_new,x)*airy_ai(args_new[4]),
+        f_2: simpl_2(h_function/m_function_new,x)*airy_bi(args_new[4]),
+        answer: write_solution(args_new, dep_var, x, f_1, f_2, answer)
         ),
     if exponent#inf and exponent#-2 then
         (
@@ -383,9 +416,9 @@ solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_dat
         args_new: inv_transform(args_list, phi, phi_inv, x),
         m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_bessel),
         print("The solutions can be expressed in terms of Bessel functions"),
-        /*print("with parameter a =", sol_a),*/
-        push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*bessel_j(sol_a,args_new[4])
-            +%k2*simpl_2(h_function/m_function_new,x)*bessel_y(sol_a,args_new[4]), answer)
+        f_1: simpl_2(h_function/m_function_new,x)*bessel_j(sol_a,args_new[4]),
+        f_2: simpl_2(h_function/m_function_new,x)*bessel_y(sol_a,args_new[4]),
+        answer: write_solution(args_new, dep_var, x, f_1, f_2, answer)
         ),
     if exponent#-2 then
         (
@@ -409,14 +442,15 @@ solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_dat
                 m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_hermite),
                 if askinteger(lambda,even)=yes then
                     (
-                    push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*hermite(lambda,args_new[4])
-                        +%k2*simpl_2(h_function/m_function_new*args_new[4],x)*kummer_m((1-lambda)/2,3/2,args_new[4]^2), answer)
+                    f_1: simpl_2(h_function/m_function_new,x)*hermite(lambda,args_new[4]),
+                    f_2: simpl_2(h_function/m_function_new*args_new[4],x)*kummer_m((1-lambda)/2,3/2,args_new[4]^2)
                     )
                 else
                     (
-                    push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*hermite(lambda,args_new[4])
-                        +%k2*simpl_2(h_function/m_function_new,x)*kummer_m(-lambda/2,1/2,args_new[4]^2), answer)
-                    )
+                    f_1: simpl_2(h_function/m_function_new,x)*hermite(lambda,args_new[4]),
+                    f_2: simpl_2(h_function/m_function_new,x)*kummer_m(-lambda/2,1/2,args_new[4]^2)
+                    ),
+                answer: write_solution(args_new, dep_var, x, f_1, f_2, answer)
                 )
             else
                 (
@@ -429,7 +463,8 @@ solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_dat
                 args_new: inv_transform(args_list, phi, phi_inv, x),
                 m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_kummer),
                 print("The solutions can be expressed in terms of parabolic cylinder functions."),
-                answer: kummer_fund_system(dep_var,h_function/m_function_new,sol_a,sol_b,args_new[4],answer)
+                answer: kummer_fund_system(args_new, h_function/m_function_new, dep_var, x, sol_a, sol_b, answer)
+                /*answer: kummer_fund_system(dep_var,h_function/m_function_new,sol_a,sol_b,args_new[4],answer)*/
                 )
             )
         else
@@ -440,10 +475,10 @@ solve_parabolic_cylinder(args_list,h_function,dep_var,x):=block([answer, det_dat
     return(answer)
     )$
 
-
-kummer_fund_system(dep_var, h_function, sol_a, sol_b, argument, answer):=block([],
+/* kummer_fund_system(dep_var, h_function, sol_a, sol_b, argument, answer)*/
+kummer_fund_system(args_list, h_function, dep_var, x, sol_a, sol_b, answer):=block([f_1, f_2],
     /*This function assigns
-    dep_var=%k1*h_function*kummer_1(sol_a,sol_b,argument)+%k2*h_function*kummer_2(sol_a,sol_b,argument)
+    dep_var=%k1*h_function*kummer_1(sol_a,sol_b,args_list[4])+%k2*h_function*kummer_2(sol_a,sol_b,args_list[4])
     where kummer_1 and kummer_2 are two linearly independent solutions of the Kummer equation.
     The functions kummer_1 and kummer_2 are the functions kummer_m or kummer_u or related functions or generalized Laguerre polynomials.*/
     if askinteger(sol_a)=yes and asksign(sol_a)#pos then
@@ -452,13 +487,13 @@ kummer_fund_system(dep_var, h_function, sol_a, sol_b, argument, answer):=block([
         print("of degree ", -sol_a, " with parameter ", ratsimp(sol_b-1), " and confluent hypergeometric functions."),
         if askinteger(sol_b)=no then 
             (
-            push(dep_var=%k1*simpl_2(h_function*gen_laguerre(-sol_a,ratsimp(sol_b-1),argument),x)
-                +%k2*simpl_2(h_function*argument^(ratsimp(1-sol_b)),x)*kummer_m(ratsimp(1+sol_a-sol_b),ratsimp(2-sol_b),argument), answer)
+            f_1: simpl_2(h_function*gen_laguerre(-sol_a,ratsimp(sol_b-1),args_list[4]),x),
+            f_2: simpl_2(h_function*args_list[4]^(ratsimp(1-sol_b)),x)*kummer_m(ratsimp(1+sol_a-sol_b),ratsimp(2-sol_b),args_list[4])
             )
         else
             (
-            push(dep_var=%k1*simpl_2(h_function*gen_laguerre(-sol_a,ratsimp(sol_b-1),argument),x)
-                +%k2*simpl_2(h_function*exp(argument),x)*kummer_u(ratsimp(sol_b-sol_a),sol_b,-argument), answer)
+            f_1: simpl_2(h_function*gen_laguerre(-sol_a,ratsimp(sol_b-1),args_list[4]),x),
+            f_2: simpl_2(h_function*exp(args_list[4]),x)*kummer_u(ratsimp(sol_b-sol_a),sol_b,-args_list[4])
             )
         )
     else 
@@ -466,33 +501,34 @@ kummer_fund_system(dep_var, h_function, sol_a, sol_b, argument, answer):=block([
         print("The solutions can be expressed in terms of confluent hypergeometric functions."),
         if is(sol_a=sol_b)=true then
             (
-            push(dep_var=%k1*simpl_2(h_function*exp(argument),x)
-                +%k2*simpl_2(h_function,x)*kummer_u(sol_a,sol_b,argument), answer)
+            f_1: simpl_2(h_function*exp(args_list[4]),x),
+            f_2: simpl_2(h_function,x)*kummer_u(sol_a,sol_b,args_list[4])
             )
         else
             (
             if askinteger(sol_b)=yes and asksign(sol_b)#pos then 
                 (
-                push(dep_var=%k1*simpl_2(h_function,x)*kummer_m(ratsimp(1+sol_a-sol_b),ratsimp(2-sol_b),argument)
-                    +%k2*simpl_2(h_function,x)*kummer_u(sol_a,sol_b,argument), answer)
+                f_1: simpl_2(h_function,x)*kummer_m(ratsimp(1+sol_a-sol_b),ratsimp(2-sol_b),args_list[4]),
+                f_2: simpl_2(h_function,x)*kummer_u(sol_a,sol_b,args_list[4])
                 )
             else if sol_a=1/2 and sol_b=3/2 then
                 (
-                push(dep_var=%k1*simpl_2(h_function,x)*erf(%i*sqrt(argument))/sqrt(argument)
-                    +%k2*simpl_2(h_function*argument^(-1/2),x), answer)
+                f_1: simpl_2(h_function,x)*erf(%i*sqrt(args_list[4]))/sqrt(args_list[4]),
+                f_2: simpl_2(h_function*args_list[4]^(-1/2),x)
                 )
             else
                 (
-                push(dep_var=%k1*simpl_2(h_function,x)*kummer_m(sol_a,sol_b,argument)
-                    +%k2*simpl_2(h_function,x)*kummer_u(sol_a,sol_b,argument), answer)
+                f_1: simpl_2(h_function,x)*kummer_m(sol_a,sol_b,args_list[4]),
+                f_2: simpl_2(h_function,x)*kummer_u(sol_a,sol_b,args_list[4])
                 )
             )
         ),
+    answer: write_solution(args_list, dep_var, x, f_1, f_2, answer),
     return(answer)
     )$
 
 
-solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([answer, beta, nm, det_data, coeffA, coeffB, coeffC, exponent, k, alpha, sol_a, sol_b, phi, phi_inv, m_function_new, h_function_bessel, h_function_kummer, h_function_airy, args_new],
+solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=block([answer, f_1, f_2, beta, nm, det_data, coeffA, coeffB, coeffC, exponent, k, alpha, sol_a, sol_b, phi, phi_inv, m_function_new, h_function_bessel, h_function_kummer, h_function_airy, args_new],
     answer: [],
     if length(reg_sing)#1 or length(irreg_sing)#1 then 
         (
@@ -537,8 +573,9 @@ solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=bloc
                     args_new: inv_transform(args_list, phi, phi_inv, x),
                     m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_airy),
                     print("The solutions can be expressed in terms of Airy functions."),
-                    push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*airy_ai(args_new[4])
-                        +%k2*simpl_2(h_function/m_function_new,x)*airy_bi(args_new[4]), answer)
+                    f_1: simpl_2(h_function/m_function_new,x)*airy_ai(args_new[4]),
+                    f_2: simpl_2(h_function/m_function_new,x)*airy_bi(args_new[4]),
+                    answer: write_solution(args_new, dep_var, x, f_1, f_2, answer)
                     ),
                 alpha: ratsimp(radcan(sqrt(ratsimp(coeffA)))/exponent),
                 sol_a: ratsimp(radcan(sqrt(ratsimp(1-coeffC)))/exponent),
@@ -551,14 +588,15 @@ solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=bloc
                 /*print("with parameter a =", sol_a),*/
                 if askinteger(sol_a)=yes then
                     (
-                    push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*bessel_j(sol_a,args_new[4])
-                        +%k2*simpl_2(h_function/m_function_new,x)*bessel_y(sol_a,args_new[4]), answer)
+                    f_1: simpl_2(h_function/m_function_new,x)*bessel_j(sol_a,args_new[4]),
+                    f_2: simpl_2(h_function/m_function_new,x)*bessel_y(sol_a,args_new[4])
                     )
                 else 
                     (
-                    push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*bessel_j(sol_a,args_new[4])
-                        +%k2*simpl_2(h_function/m_function_new,x)*bessel_j(-sol_a,args_new[4]), answer)
+                    f_1: simpl_2(h_function/m_function_new,x)*bessel_j(sol_a,args_new[4]),
+                    f_2: simpl_2(h_function/m_function_new,x)*bessel_j(-sol_a,args_new[4])
                     ),
+                answer: write_solution(args_new, dep_var, x, f_1, f_2, answer),
                 /* due to different notational conventions for exponent in the cases coeffB=0 and coeffB#0
                 we need to divide exponent by 2 for the expression in terms of confluent hypergeometric functions*/
                 exponent: exponent/2
@@ -574,7 +612,8 @@ solve_bessel_or_kummer(args_list,h_function,dep_var,x,reg_sing,irreg_sing):=bloc
             phi_inv: (x/alpha)^(1/exponent)+beta,
             args_new: inv_transform(args_list, phi, phi_inv, x),
             m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_kummer),
-            answer: kummer_fund_system(dep_var,h_function/m_function_new,sol_a,sol_b,args_new[4],answer)
+            answer: kummer_fund_system(args_new, h_function/m_function_new, dep_var, x, sol_a, sol_b, answer)
+            /*answer: kummer_fund_system(dep_var,h_function/m_function_new,sol_a,sol_b,args_new[4],answer)*/
             )
         ),
     return(answer)
@@ -624,7 +663,7 @@ solve_bessel_or_kummer_mobius_or_spheroid(args_list,h_function,dep_var,x,reg_sin
     )$
 
 
-solve_spheroid(args_list,h_function,dep_var,x,reg_sing):=block([args_new, answer, dummy, phi, phi_inv, q0_mult, sol_q, sol_a, sol_b, sol_c, m_function_mathieu, m_function_new, h_function_mathieu, h_function_spheroid],
+solve_spheroid(args_list,h_function,dep_var,x,reg_sing):=block([args_new, answer, f_1, f_2, dummy, phi, phi_inv, q0_mult, sol_q, sol_a, sol_b, sol_c, m_function_mathieu, m_function_new, h_function_mathieu, h_function_spheroid],
     answer: [],
     /*-----------------------------------------------------------------------------------------------
     We order the singular points increasingly in their real part
@@ -660,16 +699,18 @@ solve_spheroid(args_list,h_function,dep_var,x,reg_sing):=block([args_new, answer
             h_function_mathieu: (1-x^2)^(-1/4),
             m_function_mathieu: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_mathieu),
             print("The solutions can be given in terms of Mathieu functions."),
-            push(dep_var=%k1*simpl_2(h_function/m_function_mathieu,x)*mathieu_1(sol_a,sol_q,acos(args_new[4]))
-                +%k2*simpl_2(h_function/m_function_mathieu,x)*mathieu_2(sol_a,sol_q,acos(args_new[4])), answer)
+            f_1: simpl_2(h_function/m_function_mathieu,x)*mathieu_1(sol_a,sol_q,acos(args_new[4])),
+            f_2: simpl_2(h_function/m_function_mathieu,x)*mathieu_2(sol_a,sol_q,acos(args_new[4])),
+            answer: write_solution(args_new, dep_var, x, f_1, f_2, answer)
             ),
         sol_b: ratsimp(radcan(sqrt(4-coeff(q0_mult,x,4)-coeff(q0_mult,x,2)-coeff(q0_mult,x,0)))/2),
         sol_c: ratsimp(coeff(q0_mult,x,0)/4-sol_b-1),
         h_function_spheroid: (1-x^2)^(-(sol_b+1)/2),
         m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_spheroid),
         print("The solutions can be given in terms of spheroidal wave functions."),
-        push(dep_var=%k1*simpl_2(h_function/m_function_new,x)*spherodialwave_a(sol_b,sol_c,sol_q,args_new[4])
-            +%k2*simpl_2(h_function/m_function_new,x)*spherodialwave_b(sol_b,sol_c,sol_q,args_new[4]), answer)
+        f_1: simpl_2(h_function/m_function_new,x)*spherodialwave_a(sol_b,sol_c,sol_q,args_new[4]),
+        f_2: simpl_2(h_function/m_function_new,x)*spherodialwave_b(sol_b,sol_c,sol_q,args_new[4]),
+        answer: write_solution(args_new, dep_var, x, f_1, f_2, answer)
         ),
     return(answer)
     )$
@@ -738,7 +779,7 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
             /*print("The transformed equation is a Legendre equation"),*/
             sol_nu: ratsimp((-1+radcan(sqrt(ratsimp(1-4*coeff(p0_new_mult,x,2)))))/2),
             sol_mu: sqrt(ratsimp(-coeff(p0_new_mult,x,2)-coeff(p0_new_mult,x,0))),
-            answer: legendre_fund_system(dep_var,1,sol_nu,sol_mu,args_new[4],answer)
+            answer: legendre_fund_system(args_new, 1, dep_var, x, sol_nu, sol_mu, answer)
             )
         /*---------------------------------------------------------------------------------------------
         Case 2: the transformed equation is not a Legendre equation.
@@ -766,7 +807,7 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
                     sol_mu: radcan(sqrt(1-coeffA/4-coeffC/4)),
                     h_function_legendre: 1/sqrt(x^2-1),
                     m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_legendre),
-                    answer: legendre_fund_system(dep_var,h_function/m_function_new,sol_nu,sol_mu,args_new[4],answer)
+                    answer: legendre_fund_system(args_new, h_function/m_function_new, dep_var, x, sol_nu, sol_mu, answer)
                     )
                 )
             ),
@@ -786,7 +827,7 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
             coeff2: coeff(p1_new_mult,x,1),
             sol_a: ratsimp((-1-coeff2-radcan(sqrt(expand((1+coeff2)^2+4*p0_new_mult))))/2),
             sol_b: ratsimp((-1-coeff2+radcan(sqrt(expand((1+coeff2)^2+4*p0_new_mult))))/2),
-            answer: hypergeo_fund_system(dep_var,1,sol_a,sol_b,sol_c,args_new[4],answer)
+            answer: hypergeo_fund_system(args_new, h_function/m_function_new, dep_var, x, sol_a, sol_b, sol_c, answer)
             )
         /*---------------------------------------------------------------------------------------------
         Case 2: the transformed equation is not a hypergeometric equation.
@@ -824,7 +865,7 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
                         /*print("Determination of a, b, c successful"),*/
                         h_function_hypergeo: exp(-(sol_c*log(x)+ratsimp(1+sol_a+sol_b-sol_c)*log(x-1))/2),
                         m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_hypergeo),
-                        answer: hypergeo_fund_system(dep_var,h_function/m_function_new,sol_a,sol_b,sol_c,args_new[4],answer)
+                        answer: hypergeo_fund_system(args_new, h_function/m_function_new, dep_var, x, sol_a, sol_b, sol_c, answer)
                         )
                     )
                 else
@@ -832,7 +873,7 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
                     /*print("Determination of a, b, c successful"),*/
                     h_function_hypergeo: exp(-(sol_c*log(x)+ratsimp(1+sol_a+sol_b-sol_c)*log(x-1))/2),
                     m_function_new: diff(args_new[4],x)^(1/2)*subst(args_new[4],x,h_function_hypergeo),
-                    answer: hypergeo_fund_system(dep_var,h_function/m_function_new,sol_a,sol_b,sol_c,args_new[4],answer)
+                    answer: hypergeo_fund_system(args_new, h_function/m_function_new, dep_var, x, sol_a, sol_b, sol_c, answer)
                     )
                 )
             )
@@ -841,7 +882,8 @@ solve_legendre_or_hypergeo(args_list,h_function,dep_var,x,reg_sing,irreg_sing,re
     )$
 
 
-legendre_fund_system(dep_var,h_function,sol_nu,sol_mu,argument,answer):=block([],
+/*legendre_fund_system(dep_var, h_function, sol_nu, sol_mu, argument, answer):=block([f_1, f_2],*/
+legendre_fund_system(args_list, h_function, dep_var, x, sol_nu, sol_mu, answer):=block([f_1, f_2],
     /* see https://dlmf.nist.gov/14.2 */
     if asksign(realpart(sol_mu))=neg then
         (
@@ -858,156 +900,166 @@ legendre_fund_system(dep_var,h_function,sol_nu,sol_mu,argument,answer):=block([]
     print("(a fundamental system has not yet been implemented in all cases)"),
     if askinteger(sol_nu-sol_mu)=yes and asksign(sol_nu-sol_mu)=neg then
         (
-        push(dep_var=%k1*simpl_2(h_function*assoc_legendre_p(sol_nu,sol_mu,argument),x)
-            +%k2*simpl_2(h_function*assoc_legendre_p(sol_nu,sol_mu,-argument),x),answer)
+        f_1: simpl_2(h_function*assoc_legendre_p(sol_nu,sol_mu,args_list[4]),x),
+        f_2: simpl_2(h_function*assoc_legendre_p(sol_nu,sol_mu,-args_list[4]),x)
         )
     else
         (
-        push(dep_var=%k1*simpl_2(h_function*assoc_legendre_p(sol_nu,sol_mu,argument),x)
-            +%k2*simpl_2(h_function*assoc_legendre_q(sol_nu,sol_mu,argument),x),answer)
+        f_1: simpl_2(h_function*assoc_legendre_p(sol_nu,sol_mu,args_list[4]),x),
+        f_2: simpl_2(h_function*assoc_legendre_q(sol_nu,sol_mu,args_list[4]),x)
         ),
+    answer: write_solution(args_list, dep_var, x, f_1, f_2, answer),
     return(answer)
     )$
 
 
-hypergeo_fund_system(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=block([expand_hypergeometric: true],
+/* hypergeo_fund_system(dep_var, h_function, sol_a, sol_b, sol_c, argument, answer) */
+hypergeo_fund_system(args_list, h_function, dep_var, x, sol_a, sol_b, sol_c, answer):=block([expand_hypergeometric: true, f_1, f_2, f_list],
     /*This function assigns
-    dep_var=%k1*h_function*gauss_1(sol_a,sol_b,sol_c,argument)+%k2*h_function*gauss_2(sol_a,sol_b,sol_c,argument)
+    dep_var=%k1*h_function*gauss_1(sol_a,sol_b,sol_c,args_list[4])+%k2*h_function*gauss_2(sol_a,sol_b,sol_c,args_list[4])
     where gauss_1 and gauss_2 are two linearly independent solutions of the hypergeometric equation.
     The functions gauss_1 and gauss_2 are defined as in https://dlmf.nist.gov/15.10 */
     print("The solutions can be expressed in terms of hypergeometric functions"),
     print("with parameters a =", sol_a, ", b =", sol_b, ", c =", sol_c),
-    if asksign(cabs(argument)-1)=neg then
+    if asksign(cabs(args_list[4])-1)=neg then
         (
         if sol_a=0 then
             (
-            push(dep_var=%k1*simpl_2(h_function,x)+%k2*simpl_2(h_function*subst(argument,s,integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s)),x),answer)
+            f_1: simpl_2(h_function,x),
+            f_2: simpl_2(h_function*subst(args_list[4],s,integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s)),x)
             )
         else if sol_b=0 then
             (
-            push(dep_var=%k1*simpl_2(h_function,x)+%k2*simpl_2(h_function*subst(argument,s,integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s)),x),answer)
+            f_1: simpl_2(h_function,x),
+            f_2: simpl_2(h_function*subst(args_list[4],s,integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s)),x)
             )
         else if askinteger(sol_c)=yes then
             (
-            answer: hypergeo_integer_case(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer)
+            f_list: hypergeo_integer_case(dep_var,h_function,sol_a,sol_b,sol_c,args_list[4],answer),
+            f_1: f_list[1],
+            f_2: f_list[2]
             )
         /*c not integer*/
         else
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x)
-                +%k2*simpl_2(h_function*argument^(ratsimp(1-sol_c))
-                *hypergeometric([ratsimp(1+sol_a-sol_c),ratsimp(1+sol_b-sol_c)],[ratsimp(2-sol_c)],argument),x),answer)
+            f_1: simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],args_list[4]),x),
+            f_2: simpl_2(h_function*args_list[4]^(ratsimp(1-sol_c))*hypergeometric([ratsimp(1+sol_a-sol_c),ratsimp(1+sol_b-sol_c)],[ratsimp(2-sol_c)],args_list[4]),x)
             )
         )
-    else if asksign(cabs(1-argument)-1)=neg then
+    else if asksign(cabs(1-args_list[4])-1)=neg then
         (
         if sol_a=0 then
             (
-            push(dep_var=%k1*simpl_2(h_function,x)+%k2*simpl_2(h_function*subst(argument,s,integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s)),x),answer)
+            f_1: simpl_2(h_function,x),
+            f_2: simpl_2(h_function*subst(args_list[4],s,integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s)),x)
             )
         else if sol_b=0 then
             (
-            push(dep_var=%k1*simpl_2(h_function,x)+%k2*simpl_2(h_function*subst(argument,s,integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s)),x),answer)
+            f_1: simpl_2(h_function,x),
+            f_2: simpl_2(h_function*subst(args_list[4],s,integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s)),x)
             )
         else if askinteger(sol_c-sol_a-sol_b)=yes then
             (
-            answer: hypergeo_integer_case(dep_var,h_function,sol_a,sol_b,1+sol_a+sol_b-sol_c,simpl(1-argument),answer)
+            f_list: hypergeo_integer_case(dep_var,h_function,sol_a,sol_b,1+sol_a+sol_b-sol_c,simpl(1-args_list[4]),answer),
+            f_1: f_list[1],
+            f_2: f_list[2]
             )
         /*sol_c-sol_a-sol_b not integer*/
         else
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([sol_a,sol_b],[ratsimp(1+sol_a+sol_b-sol_c)],simpl(1-argument)),x)
-                +%k2*simpl_2(h_function*(1-argument)^(ratsimp(sol_c-sol_a-sol_b))
-                *hypergeometric([ratsimp(sol_c-sol_a),ratsimp(sol_c-sol_b)],[ratsimp(1+sol_c-sol_a-sol_b)],simpl(1-argument)),x),answer)
-            /*push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,ratsimp(1+sol_a+sol_b-sol_c),simpl(1-argument))
-                +%k2*h_function*(simpl(1-argument))^(ratsimp(sol_c-sol_a-sol_b))
-                *gauss_a(ratsimp(sol_c-sol_a),ratsimp(sol_c-sol_b),ratsimp(1+sol_c-sol_a-sol_b),simpl(1-argument)),answer)*/
+            f_1: simpl_2(h_function*hypergeometric([sol_a,sol_b],[ratsimp(1+sol_a+sol_b-sol_c)],simpl(1-args_list[4])),x),
+            f_2: simpl_2(h_function*(1-args_list[4])^(ratsimp(sol_c-sol_a-sol_b))*hypergeometric([ratsimp(sol_c-sol_a),ratsimp(sol_c-sol_b)],[ratsimp(1+sol_c-sol_a-sol_b)],simpl(1-args_list[4])),x)
+            /*push(dep_var=%k1*h_function*gauss_a(sol_a,sol_b,ratsimp(1+sol_a+sol_b-sol_c),simpl(1-args_list[4]))
+                +%k2*h_function*(simpl(1-args_list[4]))^(ratsimp(sol_c-sol_a-sol_b))
+                *gauss_a(ratsimp(sol_c-sol_a),ratsimp(sol_c-sol_b),ratsimp(1+sol_c-sol_a-sol_b),simpl(1-args_list[4])),answer)*/
             )
         )
-    else if asksign(cabs(argument)-1)=pos then
+    else if asksign(cabs(args_list[4])-1)=pos then
         (
         if sol_a=0 then
             (
-            push(dep_var=%k1*simpl_2(h_function,x)
-                +%k2*simpl_2(h_function*subst(argument,s,integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s)),x),answer)
+            f_1: simpl_2(h_function,x),
+            f_2: simpl_2(h_function*subst(args_list[4],s,integrate((1-s)^(sol_c-sol_b-1)*s^(-sol_c),s)),x)
             )
         else if sol_b=0 then
             (
-            push(dep_var=%k1*simpl_2(h_function,x)
-                +%k2*simpl_2(h_function*subst(argument,s,integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s)),x),answer)
+            f_1: simpl_2(h_function,x),
+            f_2: simpl_2(h_function*subst(args_list[4],s,integrate((1-s)^(sol_c-sol_a-1)*s^(-sol_c),s)),x)
             )
         else if askinteger(sol_a-sol_b)=yes then
             (
-            answer: hypergeo_integer_case(dep_var,h_function*argument^(-sol_a),sol_a,sol_a-sol_c+1,sol_a-sol_b+1,1/argument,answer)
+            f_list: hypergeo_integer_case(dep_var,h_function*args_list[4]^(-sol_a),sol_a,sol_a-sol_c+1,sol_a-sol_b+1,1/args_list[4],answer),
+            f_1: f_list[1],
+            f_2: f_list[2]
             )
         /*sol_a-sol_b not integer*/
         else
             (
-            push(dep_var=%k1*simpl_2(h_function*argument^(-sol_a)*hypergeometric([sol_a,ratsimp(1+sol_a-sol_c)],[ratsimp(1+sol_a-sol_b)],1/argument),x)
-                +%k2*simpl_2(h_function*argument^(-sol_b)
-                *hypergeometric([sol_b,ratsimp(1+sol_b-sol_c)],[ratsimp(1+sol_b-sol_a)],1/argument),x),answer)
-            /*push(dep_var=%k1*h_function*argument^(-sol_a)*gauss_a(sol_a,ratsimp(1+sol_a-sol_c),ratsimp(1+sol_a-sol_b),1/argument)
-                +%k2*h_function*argument^(-sol_b)
-                *gauss_a(sol_b,ratsimp(1+sol_b-sol_c),ratsimp(1+sol_b-sol_a),1/argument),answer)*/
+            f_1: simpl_2(h_function*args_list[4]^(-sol_a)*hypergeometric([sol_a,ratsimp(1+sol_a-sol_c)],[ratsimp(1+sol_a-sol_b)],1/args_list[4]),x),
+            f_2: simpl_2(h_function*args_list[4]^(-sol_b)*hypergeometric([sol_b,ratsimp(1+sol_b-sol_c)],[ratsimp(1+sol_b-sol_a)],1/args_list[4]),x)
+            /*push(dep_var=%k1*h_function*args_list[4]^(-sol_a)*gauss_a(sol_a,ratsimp(1+sol_a-sol_c),ratsimp(1+sol_a-sol_b),1/args_list[4])
+                +%k2*h_function*args_list[4]^(-sol_b)
+                *gauss_a(sol_b,ratsimp(1+sol_b-sol_c),ratsimp(1+sol_b-sol_a),1/args_list[4]),answer)*/
             )
         )
     else
         (
         print("In this case a fundamental system for this equation in terms of hypergeometric functions has not yet been implemented."),
-        push(dep_var=%k1*simpl_2(h_function,x)*gauss_a(sol_a,sol_b,sol_c,argument)
-            +%k2*simpl_2(h_function,x)*gauss_b(sol_a,sol_b,sol_c,argument),answer)
+        f_1: simpl_2(h_function,x)*gauss_a(sol_a,sol_b,sol_c,args_list[4]),
+        f_2: simpl_2(h_function,x)*gauss_b(sol_a,sol_b,sol_c,args_list[4])
         ),
+    answer: write_solution(args_list, dep_var, x, f_1, f_2, answer),
     return(answer)
     )$
 
 
-hypergeo_integer_case(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=block([expand_hypergeometric: true],
+hypergeo_integer_case(dep_var, h_function, sol_a, sol_b, sol_c, argument, answer):=block([expand_hypergeometric: true, f_1, f_2],
     if asksign(sol_c)=pos then
         (
         /*a, b in {0, -1, -2, ...}*/
         if askinteger(sol_a)=yes and asksign(sol_a)#pos and askinteger(sol_b)=yes and asksign(sol_b)#pos then
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x)
-                +%k2*simpl_2(h_function*(hypergeometric([sol_a,sol_b],[sol_c],argument)*log(argument)
+            f_1: simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x),
+            f_2: simpl_2(h_function*(hypergeometric([sol_a,sol_b],[sol_c],argument)*log(argument)
                 -sum((sol_c-1)!*(k-1)!/((sol_c-k-1)!*pochhammer(1-sol_a,k)*pochhammer(1-sol_b,k))*(-argument)^(-k),k,1,sol_c-1)
                 +sum(pochhammer(sol_a,k)*pochhammer(sol_b,k)*argument^k/(pochhammer(sol_c,k)*k!)
                 *(psi[0](1-sol_a-k)+psi[0](1-sol_b-k)-psi[0](1+k)-psi[0](sol_c+k)),k,0,-sol_b)
-                +(-1)^(-sol_b)*(-sol_b)!*sum((k-1+sol_b)!*pochhammer(sol_a,k)*argument^k/(pochhammer(sol_c,k)*k!), k, 1-sol_b, -sol_a)),x),answer)
+                +(-1)^(-sol_b)*(-sol_b)!*sum((k-1+sol_b)!*pochhammer(sol_a,k)*argument^k/(pochhammer(sol_c,k)*k!), k, 1-sol_b, -sol_a)),x)
             )
         /*a not in {c-1, c-2, ...., 0, -1, ...} and b in {0, -1, -2, ...}*/
         else if ( askinteger(sol_b)=yes and asksign(sol_b)#pos ) and ( askinteger(sol_a-sol_c)=no or asksign(sol_a-sol_c)#neg ) then
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x)
-                +%k2*simpl_2(h_function*(hypergeometric([sol_a,sol_b],[sol_c],argument)*log(argument)
+            f_1: simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x),
+            f_2: simpl_2(h_function*(hypergeometric([sol_a,sol_b],[sol_c],argument)*log(argument)
                 -sum((sol_c-1)!*(k-1)!/((sol_c-k-1)!*pochhammer(1-sol_a,k)*pochhammer(1-sol_b,k))*(-argument)^(-k),k,1,sol_c-1)
                 +sum(pochhammer(sol_a,k)*pochhammer(sol_b,k)*argument^k/(pochhammer(sol_c,k)*k!)
                 *(psi[0](1-sol_b-k)+psi[0](sol_a+k)-psi[0](1+k)-psi[0](sol_c+k)),k,0,-sol_b)
-                +(-1)^(-sol_b)*(-sol_b)!*sum((k-1+sol_b)!*pochhammer(sol_a,k)*argument^k/(pochhammer(sol_c,k)*k!), k, 1-sol_b, inf)),x),answer)
+                +(-1)^(-sol_b)*(-sol_b)!*sum((k-1+sol_b)!*pochhammer(sol_a,k)*argument^k/(pochhammer(sol_c,k)*k!), k, 1-sol_b, inf)),x)
             )
         /*a in {0, -1, -2, ...} and b not in {c-1, c-2, ...., 0, -1, ...}*/
         else if ( askinteger(sol_a)=yes and asksign(sol_a)#pos ) and ( askinteger(sol_b-sol_c)=no or asksign(sol_b-sol_c)#neg ) then
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x)
-                +%k2*simpl_2(h_function*(hypergeometric([sol_a,sol_b],[sol_c],argument)*log(argument)
+            f_1: simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x),
+            f_2: simpl_2(h_function*(hypergeometric([sol_a,sol_b],[sol_c],argument)*log(argument)
                 -sum((sol_c-1)!*(k-1)!/((sol_c-k-1)!*pochhammer(1-sol_a,k)*pochhammer(1-sol_b,k))*(-argument)^(-k),k,1,sol_c-1)
                 +sum(pochhammer(sol_a,k)*pochhammer(sol_b,k)*argument^k/(pochhammer(sol_c,k)*k!)
                 *(psi[0](1-sol_a-k)+psi[0](sol_b+k)-psi[0](1+k)-psi[0](sol_c+k)),k,0,-sol_a)
-                +(-1)^(-sol_a)*(-sol_a)!*sum((k-1+sol_a)!*pochhammer(sol_b,k)*argument^k/(pochhammer(sol_c,k)*k!), k, 1-sol_a, inf)),x),answer)
+                +(-1)^(-sol_a)*(-sol_a)!*sum((k-1+sol_a)!*pochhammer(sol_b,k)*argument^k/(pochhammer(sol_c,k)*k!), k, 1-sol_a, inf)),x)
             )
         /*a, b not in {c-1, c-2, ...., 0, -1, ....}*/
         else if ( askinteger(sol_a-sol_c)=no or asksign(sol_a-sol_c)#neg ) and ( askinteger(sol_b-sol_c)=no or asksign(sol_b-sol_c)#neg ) then
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x)
-                +%k2*simpl_2(h_function*(hypergeometric([sol_a,sol_b],[sol_c],argument)*log(argument)
+            f_1: simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x),
+            f_2: simpl_2(h_function*(hypergeometric([sol_a,sol_b],[sol_c],argument)*log(argument)
                 -sum((sol_c-1)!*(k-1)!/((sol_c-k-1)!*pochhammer(1-sol_a,k)*pochhammer(1-sol_b,k))*(-argument)^(-k),k,1,sol_c-1)
                 +sum(pochhammer(sol_a,k)*pochhammer(sol_b,k)*argument^k/(pochhammer(sol_c,k)*k!)
-                *(psi[0](sol_a+k)+psi[0](sol_b+k)-psi[0](k+1)-psi[0](sol_c+k)), k, 1, inf)),x),answer)
+                *(psi[0](sol_a+k)+psi[0](sol_b+k)-psi[0](k+1)-psi[0](sol_c+k)), k, 1, inf)),x)
             )
         /*a in {1, ..., c-1} or b in {1, ..., c-1}*/
         else
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x)
-                +%k2*simpl_2(h_function*argument^(ratsimp(1-sol_c))*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x),answer)
+            f_1: simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x),
+            f_2: simpl_2(h_function*argument^(ratsimp(1-sol_c))*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x)
             )
         )
     /*c in {0, -1, -2, ...}*/
@@ -1016,49 +1068,52 @@ hypergeo_integer_case(dep_var,h_function,sol_a,sol_b,sol_c,argument,answer):=blo
         /*a, b in {c-1, c-2, c-3, ...}*/
         if askinteger(sol_a)=yes and asksign(sol_a-sol_c)=neg and askinteger(sol_b)=yes and asksign(sol_b-sol_c)=neg then
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x)
-                +%k2*simpl_2(h_function*(hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument)*log(argument)
+            f_1: simpl_2(h_function*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x),
+            f_2: simpl_2(h_function*(hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument)*log(argument)
                 -sum((1-sol_c)!*(k-1)!/((1-sol_c-k)!*pochhammer(sol_c-sol_a,k)*pochhammer(sol_c-sol_b,k))*(-argument)^(-k),k,1,1-sol_c)
                 +sum(pochhammer(1+sol_a-sol_c,k)*pochhammer(1+sol_b-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!)
                 *(psi[0](sol_c-sol_a-k)+psi[0](sol_c-sol_b-k)-psi[0](1+k)-psi[0](2-sol_c+k)),k,0,sol_c-sol_b-1)
-                +(-1)^(sol_c-sol_b-1)*(sol_c-sol_b-1)!*sum((k+sol_b-sol_c)!*pochhammer(1+sol_a-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!), k, sol_c-sol_b, sol_c-sol_a-1)),x),answer)
+                +(-1)^(sol_c-sol_b-1)*(sol_c-sol_b-1)!*sum((k+sol_b-sol_c)!*pochhammer(1+sol_a-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!), k, sol_c-sol_b, sol_c-sol_a-1)),x)
             )
         /*a not in {0, -1, -2, ....} and b in {c-1, c-2, ...}*/
         else if ( askinteger(sol_b)=yes and asksign(sol_b-sol_c)=neg ) and ( askinteger(sol_a)=no or asksign(sol_a)=pos ) then
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x)
-                +%k2*simpl_2(h_function*(hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument)*log(argument)
+            f_1: simpl_2(h_function*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x),
+            f_2: simpl_2(h_function*(hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument)*log(argument)
                 -sum((1-sol_c)!*(k-1)!/((1-sol_c-k)!*pochhammer(sol_c-sol_a,k)*pochhammer(sol_c-sol_b,k))*(-argument)^(-k),k,1,1-sol_c)
                 +sum(pochhammer(1+sol_a-sol_c,k)*pochhammer(1+sol_b-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!)
                 *(psi[0](sol_c-sol_b-k)+psi[0](1+sol_a-sol_c+k)-psi[0](1+k)-psi[0](2-sol_c+k)),k,0,sol_c-sol_b-1)
-                +(-1)^(sol_c-sol_b-1)*(sol_c-sol_b-1)!*sum((k+sol_b-sol_c)!*pochhammer(1+sol_a-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!), k, sol_c-sol_b, inf)),x),answer)
+                +(-1)^(sol_c-sol_b-1)*(sol_c-sol_b-1)!*sum((k+sol_b-sol_c)!*pochhammer(1+sol_a-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!), k, sol_c-sol_b, inf)),x)
             )
         /*a in {c-1, c-2, ...} and b not in {0, -1, -2, ....}*/
         else if ( askinteger(sol_a)=yes and asksign(sol_a-sol_c)=neg ) and ( askinteger(sol_b)=no or asksign(sol_b)=pos ) then
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x)
-                +%k2*simpl_2(h_function*(hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument)*log(argument)
+            f_1: simpl_2(h_function*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x),
+            f_2: simpl_2(h_function*(hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument)*log(argument)
                 -sum((1-sol_c)!*(k-1)!/((1-sol_c-k)!*pochhammer(sol_c-sol_a,k)*pochhammer(sol_c-sol_b,k))*(-argument)^(-k),k,1,1-sol_c)
                 +sum(pochhammer(1+sol_a-sol_c,k)*pochhammer(1+sol_b-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!)
                 *(psi[0](sol_c-sol_a-k)+psi[0](1+sol_b-sol_c+k)-psi[0](1+k)-psi[0](2-sol_c+k)),k,0,sol_c-sol_a-1)
-                +(-1)^(sol_c-sol_a-1)*(sol_c-sol_a-1)!*sum((k+sol_a-sol_c)!*pochhammer(1+sol_b-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!), k, sol_c-sol_a, inf)),x),answer)
+                +(-1)^(sol_c-sol_a-1)*(sol_c-sol_a-1)!*sum((k+sol_a-sol_c)!*pochhammer(1+sol_b-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!), k, sol_c-sol_a, inf)),x)
             )
         /*a, b not in {0, -1, -2, ....}*/
         else if ( askinteger(sol_a)=no or asksign(sol_a)=pos ) and ( askinteger(sol_b)=no or asksign(sol_b)=pos ) then
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x)
-                +%k2*simpl_2(h_function*(hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument)*log(argument)
+            f_1: simpl_2(h_function*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x),
+            f_2: simpl_2(h_function*(hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument)*log(argument)
                 -sum((1-sol_c)!*(k-1)!/((1-sol_c-k)!*pochhammer(sol_c-sol_a,k)*pochhammer(sol_c-sol_b,k))*(-argument)^(-k),k,1,1-sol_c)
                 +sum(pochhammer(1+sol_a-sol_c,k)*pochhammer(1+sol_b-sol_c,k)*argument^k/(pochhammer(2-sol_c,k)*k!)
-                *(psi[0](1+sol_a-sol_c+k)+psi[0](1+sol_b-sol_c+k)-psi[0](k+1)-psi[0](2-sol_c+k)), k, 1, inf)),x),answer)
+                *(psi[0](1+sol_a-sol_c+k)+psi[0](1+sol_b-sol_c+k)-psi[0](k+1)-psi[0](2-sol_c+k)), k, 1, inf)),x)
             )
         /*a, b in {c, c+1, ..., 0}*/
         else
             (
-            push(dep_var=%k1*simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x)
-                +%k2*simpl_2(h_function*argument^(ratsimp(1-sol_c))*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x),answer)
+            f_1: simpl_2(h_function*hypergeometric([sol_a,sol_b],[sol_c],argument),x),
+            f_2: simpl_2(h_function*argument^(ratsimp(1-sol_c))*hypergeometric([1+sol_a-sol_c,1+sol_b-sol_c],[2-sol_c],argument),x)
             )
-        )
+        ),
+    return([f_1, f_2])
+    /*push(dep_var=%k1*f_1+%k2*f_2, answer),
+    return(answer)*/
     )$
 
 
@@ -1120,8 +1175,8 @@ transform(h_function,q0,phi,x):=block([q0_new, h_function_new],
     )$
 
 
-inv_transform(args_list, phi, phi_inv, x):=block([p1_new, p0_new, q0_new, argument_new],
-    /*We define args_list: [p1, p0, q0, argument].
+inv_transform(args_list, phi, phi_inv, x):=block([p1_new, p0_new, q0_new, argument_new, inhom_new],
+    /*We define args_list: [p1, p0, q0, argument, inhom].
     Let f satisfy f''+p1*f'+p0*f=0 and write f=h*g
     where g satisfies g''+q0*g=0.
     Let phi and f_new such that f_new(phi(x))=f(x) and let p1_new, p0_new, q0_new 
@@ -1136,7 +1191,9 @@ inv_transform(args_list, phi, phi_inv, x):=block([p1_new, p0_new, q0_new, argume
     p1_new: ratsimp(radcan(subst(phi_inv,x,p1_new))),
     p0_new: args_list[2]/diff(phi,x)^2,
     p0_new: ratsimp(radcan(subst(phi_inv,x,p0_new))),
-    return([p1_new, p0_new, q0_new, argument_new])
+    inhom_new: args_list[5]/diff(phi,x)^2,
+    inhom_new: ratsimp(radcan(subst(phi_inv,x,inhom_new))),
+    return([p1_new, p0_new, q0_new, argument_new, inhom_new])
     )$
 
 
