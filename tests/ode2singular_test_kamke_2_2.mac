@@ -21,10 +21,10 @@ check_result(eqn, ans) := block(
         )
     )$
 
-
+testmode: true;
 
 /*
-ode_check is deactivated on the result of Kamke 2.78 since it produces an error:
+ode_check is deactivated on the result of Kamke 2.78 since it returns an error:
 
 simplifya: operator is neither an atom nor a lambda expression: ((((MTIMES SIMP) ((RAT SIMP) 1 2)
    ((MPLUS SIMP) 1
@@ -41,7 +41,7 @@ simplifya: operator is neither an atom nor a lambda expression: ((((MTIMES SIMP)
            ((%INTEGRATE SIMP)
             (($F SIMP
               (42
-               C:/Users/Hermann/Documents/maxima/tests/ode2singular_test_kamke_2_1_part2.mac
+               .......................
                SRC))
              $X)
             $X)))
@@ -172,7 +172,7 @@ check_result(eqn, ans);
 
 /* Kamke 2. 78  */ 
 (pn_(78),ans:ode2singular(eqn:'diff(y,x,2)+f(x)*'diff(y,x,1)+('diff(f(x),x,1)/2+f(x)^2/4+a)*y,y,x));
-/*ode_check produces an error*/
+/*ode_check returns an error*/
 /*check_result(eqn, ans);*/
 
 /* Kamke 2. 79  */ 
@@ -265,3 +265,5 @@ check_result(eqn, ans);
 /* Kamke 2. 100  */ 
 (pn_(100),ans:ode2singular(eqn:x*'diff(y,x,2)+2*'diff(y,x,1)-x*y-%e^x,y,x));
 check_result(eqn, ans);
+
+testmode: false;

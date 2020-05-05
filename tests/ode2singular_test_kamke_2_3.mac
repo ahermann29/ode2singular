@@ -21,6 +21,8 @@ check_result(eqn, ans) := block(
         )
     )$
 
+testmode: true;
+
 /* Kamke 2. 101  */ 
 (pn_(101),ans:ode2singular(eqn:x*'diff(y,x,2)+2*'diff(y,x,1)+a*x*y,y,x));
 check_result(eqn, ans);
@@ -242,3 +244,5 @@ check_result(eqn, ans);
 /* Kamke 2. 150  */ 
 (pn_(150),ans:ode2singular(eqn:x^2*'diff(y,x,2)+(x^2-2)*y,y,x));
 check_result(eqn, ans);
+
+testmode: false;

@@ -21,6 +21,8 @@ check_result(eqn, ans) := block(
         )
     )$
 
+testmode: true;
+
 /* Kamke 2. 1  */ 
 (pn_(1),ans:ode2singular(eqn:'diff(y,x,2),y,x));
 check_result(eqn, ans);
@@ -238,3 +240,5 @@ check_result(eqn, ans);
 /* Kamke 2. 50  */ 
 (pn_(50),ans:ode2singular(eqn:'diff(y,x,2)-4*x*'diff(y,x,1)+(4*x^2-2)*y,y,x));
 check_result(eqn, ans);
+
+testmode: false;

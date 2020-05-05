@@ -1,0 +1,229 @@
+(load("contrib_ode"),0);
+0$
+
+/* ODE tests - Second order linear equations 201-250
+
+  Reference:
+    E Kamke, Differentialgleichungen Losungsmethoden und Losungen, 
+    Vol 1, Geest & Portig, Leipzig, 1961
+*/
+
+/* Print ode number*/
+(pn_(n_):=print("Kamke ODE 2.",n_),true);
+true;
+
+
+check_result(eqn, ans) := block(
+    [],
+    if length(ans)>0 then
+        (
+        ode_check(eqn,ans[1])
+        )
+    )$
+
+testmode: true;
+
+/* Kamke 2. 201  */ 
+(pn_(201),ans:ode2singular(eqn:x^2*'diff(y,x,2)+x*(2*x+1)*'diff(y,x,1)-4*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 202  */ 
+(pn_(202),ans:ode2singular(eqn:x^2*'diff(y,x,2)-2*x*(x+1)*'diff(y,x,1)+2*(x+1)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 203  */ 
+(pn_(203),ans:ode2singular(eqn:x^2*'diff(y,x,2)+a*x^2*'diff(y,x,1)-2*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 204  */ 
+(pn_(204),ans:ode2singular(eqn:x^2*'diff(y,x,2)+(2*b+a)*x^2*'diff(y,x,1)+(b*(b+a)*x^2-2)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 205  */ 
+(pn_(205),ans:ode2singular(eqn:x^2*'diff(y,x,2)+a*x^2*'diff(y,x,1)+f(x)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 206  */ 
+(pn_(206),ans:ode2singular(eqn:x^2*'diff(y,x,2)+x*(2*a*x+b)*'diff(y,x,1)+(c*x^2+a*b*x+d)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 207  */ 
+(pn_(207),ans:ode2singular(eqn:x^2*'diff(y,x,2)+x*(a*x+b)*'diff(y,x,1)+(a1*x^2+b1*x+c_1)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 208  */ 
+(pn_(208),ans:ode2singular(eqn:x^2*'diff(y,x,2)+x^3*'diff(y,x,1)+(x^2-2)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 209  */ 
+(pn_(209),ans:ode2singular(eqn:x^2*'diff(y,x,2)+x*(x^2+2)*'diff(y,x,1)+(x^2-2)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 210  */ 
+(pn_(210),ans:ode2singular(eqn:x^2*'diff(y,x,2)-2*x*(x^2-a)*'diff(y,x,1)+(2*n*x^2+a*((-1)^n-1))*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 211  */ 
+(pn_(211),ans:ode2singular(eqn:x^2*'diff(y,x,2)+4*x^3*'diff(y,x,1)+(4*x^4+2*x^2+1)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 212  */ 
+(pn_(212),ans:ode2singular(eqn:x^2*'diff(y,x,2)+x*(a*x^2+b)*'diff(y,x,1)+f(x)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 213  */
+(pn_(213),ans:ode2singular(eqn:x^2*'diff(y,x,2)+x*(x^3+1)*'diff(y,x,1)-y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 214  */
+(pn_(214),ans:ode2singular(eqn:x^2*'diff(y,x,2)+(-x^4+(2*n+2*a+1)*x^2+a*(-1)^n-a^2)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 215  */ 
+(pn_(215),ans:ode2singular(eqn:x^2*'diff(y,x,2)+x*(a*x^n+b)*'diff(y,x,1)+(a1*x^(2*n)+b1*x^n+c_1)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 216  */ 
+(pn_(216),ans:ode2singular(eqn:y*(DD+x^b1*C+x^a1*B+x^(2*a1)*A)+x^2*'diff(y,x,2)+x*(a*x^a1+b)*'diff(y,x,1),y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 217  */ 
+(pn_(217),ans:ode2singular(eqn:x^2*'diff(y,x,2)-(2*x^2*tan(x)-x)*'diff(y,x,1)+(-x*tan(x)-a)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 218  */ 
+(pn_(218),ans:ode2singular(eqn:x^2*'diff(y,x,2)+(2*x^2*cot(x)+x)*'diff(y,x,1)+(x*cot(x)+a)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 219  */ 
+(pn_(219),ans:ode2singular(eqn:x^2*'diff(y,x,2)+2*x*f(x)*'diff(y,x,1)+(x*'diff(f(x),x,1)+f(x)^2-f(x)+a*x^2+b*x+c)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 220  */ 
+(pn_(220),ans:ode2singular(eqn:x^2*'diff(y,x,2)+2*x^2*f(x)*'diff(y,x,1)+(x^2*('diff(f(x),x,1)+f(x)^2+a)-(v-1)*v)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 221  */ 
+(pn_(221),ans:ode2singular(eqn:x^2*'diff(y,x,2)+(x-2*x^2*f(x))*'diff(y,x,1)+(x^2*(-'diff(f(x),x,1)+f(x)^2+1)-x*f(x)-v^2)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 222  */ 
+(pn_(222),ans:ode2singular(eqn:(x^2+1)*'diff(y,x,2)+x*'diff(y,x,1)+2*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 223  */ 
+assume(sqrt(x^2+1)+x>0);
+(pn_(223),ans:ode2singular(eqn:(x^2+1)*'diff(y,x,2)+x*'diff(y,x,1)-9*y,y,x));
+check_result(eqn, ans);
+forget(sqrt(x^2+1)+x>0);
+
+/* Kamke 2. 224  */ 
+(pn_(224),ans:ode2singular(eqn:(x^2+1)*'diff(y,x,2)+x*'diff(y,x,1)+a*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 225  */ 
+(pn_(225),ans:ode2singular(eqn:(x^2+1)*'diff(y,x,2)-x*'diff(y,x,1)+y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 226  */ 
+(pn_(226),ans:ode2singular(eqn:(x^2+1)*'diff(y,x,2)+2*x*'diff(y,x,1)-(v-1)*v*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 227  */ 
+(pn_(227),ans:ode2singular(eqn:(x^2+1)*'diff(y,x,2)-2*x*'diff(y,x,1)+2*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 228  */ 
+(pn_(228),ans:ode2singular(eqn:(x^2+1)*'diff(y,x,2)+3*x*'diff(y,x,1)+a*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 229  */ 
+(pn_(229),ans:ode2singular(eqn:(x^2+1)*'diff(y,x,2)+4*x*'diff(y,x,1)+2*y-2*cos(x)+2*x,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 230  */ 
+(pn_(230),ans:ode2singular(eqn:(x^2+1)*'diff(y,x,2)+a*x*'diff(y,x,1)+(a-2)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 231  */ 
+(pn_(231),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)-v*(v+1)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 232 */ 
+(pn_(232),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)-n*(n+1)*y+diff(legendre_p(n,x),x),y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 233 */ 
+(pn_(233),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)-n*(n+1)*y+diff(legendre_q(n,x),x),y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 234  */ 
+(pn_(234),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+x*'diff(y,x,1)+2,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 235  */ 
+(pn_(235),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+x*'diff(y,x,1)+a*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 236  */ 
+(pn_(236),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+x*'diff(y,x,1)+f(x)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 237  */ 
+(pn_(237),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+2*x*'diff(y,x,1),y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 238  */ 
+(pn_(238),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+2*x*'diff(y,x,1)-a,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 239  */ 
+(pn_(239),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+2*x*'diff(y,x,1)-L*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 240  */ 
+(pn_(240),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+2*x*'diff(y,x,1)-v*(v+1)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 241  */ 
+(pn_(241),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)-2*x*'diff(y,x,1)+(-v-2)*(v-1)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 242  */
+(pn_(242),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)-(3*x+1)*'diff(y,x,1)+(x-x^2)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 243  */ 
+(pn_(243),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+4*x*'diff(y,x,1)+(x^2+1)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 244  */ 
+(pn_(244),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+2*(n+1)*x*'diff(y,x,1)+(-v-n-1)*(v-n)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 245  */ 
+(pn_(245),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)-2*(n-1)*x*'diff(y,x,1)+(-v+n-1)*(v+n)*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 246  */ 
+(pn_(246),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)-2*(v-1)*x*'diff(y,x,1)-2*v*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 247  */ 
+(pn_(247),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+2*a*x*'diff(y,x,1)+(a-1)*a*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 248  */ 
+(pn_(248),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+a*x*'diff(y,x,1)+(b*x^2+c*x+d)*y,y,x));
+check_result(eqn, ans);
+
+
+/* Kamke 2. 249  */ 
+(pn_(249),ans:ode2singular(eqn:(x^2-1)*'diff(y,x,2)+(a*x+b)*'diff(y,x,1)+c*y,y,x));
+check_result(eqn, ans);
+
+/* Kamke 2. 250  */ 
+(pn_(250),ans:ode2singular(eqn:(x^2-a^2)*'diff(y,x,2)+8*x*'diff(y,x,1)+12*y,y,x));
+check_result(eqn, ans);
+
+testmode: false;
