@@ -1,0 +1,834 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 23.05.1 ] */
+/* [wxMaxima: comment start ]
+The function ode2singular tries to find the general solution y(x) to the equation p2(x)*y''(x)+p1(x)*y'(x)+p0(x)*y(x)=0.
+Load the file ode2singular.mac. We also load contrib_ode in order to use the function ode_check.
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+kill(all);
+load('ode2singular);
+load('contrib_ode);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: comment start ]
+By default, ode2singular determines fundamental systems of solutions to homogeneous equations accurately by distinguishing quite a few cases. This leads sometimes to a long computation time and to many questions asked to the user. This can be deactivated by putting "testmode: true" which we do in the following. Notice however that with "testmode: true" some inhomogeneous equations cannot be solved which can be solved with the default setting.
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+testmode: true;
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: section start ]
+Constant coefficients and power functions
+   [wxMaxima: section end   ] */
+
+
+/* [wxMaxima: input   start ] */
+p2: 1$
+p1: 0$
+p0: 4$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=x$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+nonzero;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+p2: 1$
+p1: 0$
+p0: -2/x^2$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=x$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: section start ]
+Parabolic cylinder functions, Hermite equation
+   [wxMaxima: section end   ] */
+
+
+/* [wxMaxima: input   start ] */
+kill(a)$
+p2: 1$
+p1: 0$
+p0: -(x-8)^(2*a-2)+(x-8)^(a-2)$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #7
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #3
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #5
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #8
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #6
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #4
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[2]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+kill(phi)$
+p2: 1$
+p1: 0$
+p0: -125*(phi-2)$
+eq: p2*'diff(y,phi,2)+p1*'diff(y,phi)+p0*y=0$
+ans: ode2singular(eq,y,phi);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[2]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[3]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+kill(a)$
+p2: 1$
+p1: 0$
+p0: -(x-5)^a$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #3
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[2]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[3]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: comment start ]
+For the Hermite equation ode2singular gives solutions in terms of Hermite polynomials:
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+lambda: 4$
+p2: 1$
+p1: -2*x$
+p0: 2*lambda$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+yes;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+yes;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[2]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: section start ]
+Mathieu equation and spheroidal wave equation
+   [wxMaxima: section end   ] */
+
+
+/* [wxMaxima: comment start ]
+ode2singular finds solutions which are spheroidal wave functions and also checks whether they are Mathieu functions.
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+a: 3$
+q: 5$
+p2: 1-x^2$
+p1: -x$
+p0: a+q*(2-4*x^2)$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #3
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #4
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+b: 2$
+c: 6$
+q: 8$
+p2: 1-x^2$
+p1: -2*(b+1)*x$
+p0: c-4*q*x^2$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #3
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: section start ]
+Bessel equation and Kummer equation
+   [wxMaxima: section end   ] */
+
+
+/* [wxMaxima: comment start ]
+ode2singular finds solutions which are the composition of Bessel or Kummer functions with a power of a Mobius transformation.
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+p2: 4*(x-1)^2*(x-3)^6$
+p1: 0$
+p0: 4*(x-1)^4-15*(x-3)^4$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[2]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[3]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: comment start ]
+The Bessel equation:
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+a: 1$
+p2: x^2$
+p1: x$
+p0: x^2-a^2$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[2]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[3]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: comment start ]
+The Kummer equation: ode2singular gives solutions in terms of Laguerre functions if a is a negative integer
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+a: -1$
+b: 1$
+p2: x$
+p1: b-x$
+p0: -a$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[2]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: comment start ]
+A Bessel function applied to a fractional power:
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+p2: 36*x^2$
+p1: 0$
+p0: 36*x^(2/3)+5$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[2]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[3]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: section start ]
+Hypergeometric equation
+   [wxMaxima: section end   ] */
+
+
+/* [wxMaxima: comment start ]
+ode2singular gives the solutions in terms of Legendre functions if the equation can be reduced to a Legendre equation.
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+mu: 1$
+nu: 2$
+p2: 1-x^2$
+p1: -2*x$
+p0: nu*(nu+1)-mu^2/(1-x^2)$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+a: 1$
+b: 0$
+c: -3$
+p2: x*(1-x)$
+p1: c-(a+b+1)*x$
+p0: -a*b$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #3
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #4
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+kill(m)$
+declare(m, integer)$
+p2: 1$
+p1: (m+x)/(x*(1+x))$
+p0: -(m+1)*m*(m-1)/(2*(2*m-1)*x*(1+x)^2)$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #7
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #3
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #5
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #6
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #4
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+no;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: comment start ]
+An example of an equation with 4 regular singular points:
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+p2: 4*(x+1)^2*x^2*(x-1)^2$
+p1: 0$
+p0: x^2+1$
+eq: p2*'diff(y,x,2)+p1*'diff(y,x)+p0*y=0$
+ans: ode2singular(eq,y,x);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: section start ]
+Change of variable
+   [wxMaxima: section end   ] */
+
+
+/* [wxMaxima: comment start ]
+ode2singular finds the solutions to the Mathieu equation if the user enters a suitable change of variable and its inverse:
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+kill(a)$
+kill(q)$
+p2: 1$
+p1: 0$
+p0: a-2*q*cos(2*t)$
+eq: p2*'diff(z,t,2)+p1*'diff(z,t)+p0*z=0$
+ans: ode2singular(eq,z,t);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+phi: cos(t)$
+phi_inv: acos(t)$
+ans: ode2singular_transform(eq,z,t,phi,phi_inv);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+ode_check(eq,ans[1]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: comment start ]
+The following equation is solved by spherical harmonic functions. ode2singular finds the solutions if the user enters a suitable change of variable and its inverse.
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+kill(ell)$
+kill(m)$
+declare(m,integer)$
+declare(ell,integer)$
+p2: sin(theta)^2$
+p1: cos(theta)*sin(theta)$
+p0: ell*(ell+1)*sin(theta)^2-m^2$
+eq: p2*'diff(y,theta,2)+p1*'diff(y,theta)+p0*y=0$
+ans: ode2singular(eq,y,theta);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+yes;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #3
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+nonzero;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: input   start ] */
+testmode: false;
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+phi: cos(theta)$
+phi_inv: acos(theta)$
+ans: ode2singular_transform(eq,y,theta,phi,phi_inv);
+/* [wxMaxima: input   end   ] */
+/* [wxMaxima: question  start ] */
+Question #11
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+yes;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #9
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+yes;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #2
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #7
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #10
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #3
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #5
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #8
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+yes;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #14
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #1
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+pos;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #6
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+neg;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #4
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+nonzero;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #12
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+yes;
+/* [wxMaxima: answer  end   ] */
+/* [wxMaxima: question  start ] */
+Question #13
+/* [wxMaxima: question  end   ] */
+/* [wxMaxima: answer  start ] */
+yes;
+/* [wxMaxima: answer  end   ] */
+
+
+/* [wxMaxima: comment start ]
+Let f be a solution to a linear homogeneous ode of order 2. We write f = h * g where g satisfies an ode of the form g'' + q0 * g = 0. The function transform computes the functions h and q0 after a change of variables replacing x by phi(x).
+   [wxMaxima: comment end   ] */
+
+
+/* [wxMaxima: input   start ] */
+values;
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+kill(k)$
+kill(x0)$
+kill(alpha)$
+h: exp(-3*x)$
+q0: -x$
+phi: alpha*(x-x0)^k$
+phi_inv: (x/alpha)^(1/k)+x0$
+tra: transform(h,q0,phi,x);
+/* [wxMaxima: input   end   ] */
+
+
+
+/* Old versions of Maxima abort on loading files that end in a comment. */
+"Created with wxMaxima 23.05.1"$
